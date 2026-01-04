@@ -1,67 +1,48 @@
 const surpriseButton = document.getElementById('surpriseButton');
 const message = document.getElementById('message');
-const rosesContainer = document.getElementById('rosesContainer');
+const smileRainContainer = document.getElementById('smileRainContainer');
 const sparklesContainer = document.getElementById('sparklesContainer');
 const imagesGrid = document.getElementById('imagesGrid');
+const backgroundMusic = document.getElementById('backgroundMusic');
 
-let rosesFalling = false;
-
-// Rose emoji
-const rose = '🌹';
+let animationStarted = false;
 const sparkles = ['✨', '⭐', '💫', '🌟'];
 
-// Image files array
-const imageFiles = [
-    'WhatsApp Image 2026-01-05 at 1.07.12 AM.jpeg',
-    'WhatsApp Image 2026-01-05 at 1.07.12 AM (1).jpeg',
-    'WhatsApp Image 2026-01-05 at 1.07.12 AM (2).jpeg',
-    'WhatsApp Image 2026-01-05 at 1.07.12 AM (3).jpeg',
-    'WhatsApp Image 2026-01-05 at 1.07.12 AM (4).jpeg',
-    'WhatsApp Image 2026-01-05 at 1.07.12 AM (5).jpeg',
-    'WhatsApp Image 2026-01-05 at 1.07.12 AM (6).jpeg',
-    'WhatsApp Image 2026-01-05 at 1.07.12 AM (7).jpeg',
-    'WhatsApp Image 2026-01-05 at 1.07.12 AM (8).jpeg'
-];
+// Single background image
+const backgroundImage = 'WhatsApp Image 2026-01-05 at 1.07.12 AM.jpeg';
 
-// Initialize image grid
-function initializeImageGrid() {
-    imageFiles.forEach((imageFile, index) => {
-        const gridItem = document.createElement('div');
-        gridItem.className = 'grid-item';
-        gridItem.style.animationDelay = (index * 0.1) + 's';
-        
-        const img = document.createElement('img');
-        img.src = imageFile;
-        img.alt = `Image ${index + 1}`;
-        img.loading = 'lazy';
-        
-        gridItem.appendChild(img);
-        imagesGrid.appendChild(gridItem);
-    });
+// Initialize background image
+function initializeBackgroundImage() {
+    const img = document.createElement('img');
+    img.src = backgroundImage;
+    img.alt = 'Background';
+    img.className = 'background-image';
+    img.loading = 'eager';
+    imagesGrid.appendChild(img);
 }
 
-// Initialize grid on page load
-initializeImageGrid();
+// Initialize background on page load
+initializeBackgroundImage();
 
 surpriseButton.addEventListener('click', function() {
-    if (rosesFalling) return;
+    if (animationStarted) return;
     
-    rosesFalling = true;
+    animationStarted = true;
     
-    // Show image grid
+    // Start background music
+    if (backgroundMusic) {
+        backgroundMusic.volume = 0.5; // Set volume to 50%
+        backgroundMusic.play().catch(error => {
+            console.log('Audio play failed:', error);
+            // Audio autoplay may be blocked by browser, user interaction is needed
+        });
+    }
+    
+    // Show background image
     imagesGrid.classList.add('active');
     
     // Create sparkles on button click
     createButtonSparkles();
-    
-    // Update the message with delay for smooth transition
-    setTimeout(() => {
-        message.innerHTML = `
-            <h1>For you my Shuttumani...</h1>
-            <p>Anything for your punjiri.</p>
-        `;
-        message.classList.add('updated');
-    }, 300);
     
     // Hide the button with animation
     surpriseButton.style.transform = 'scale(0)';
@@ -70,10 +51,9 @@ surpriseButton.addEventListener('click', function() {
         surpriseButton.style.display = 'none';
     }, 300);
     
-    // Start falling roses animation
+    // Start smile rain animation and reveal text
     setTimeout(() => {
-        startFallingRoses();
-        startSparkles();
+        startSmileRain();
     }, 500);
 });
 
@@ -106,83 +86,73 @@ function createButtonSparkles() {
     }
 }
 
-function startSparkles() {
-    // Create random sparkles during the animation
-    const sparkleInterval = setInterval(() => {
-        if (!rosesFalling) {
-            clearInterval(sparkleInterval);
-            return;
-        }
-        
-        const sparkle = document.createElement('div');
-        sparkle.className = 'sparkle';
-        sparkle.textContent = sparkles[Math.floor(Math.random() * sparkles.length)];
-        
-        sparkle.style.left = Math.random() * 100 + '%';
-        sparkle.style.top = (60 + Math.random() * 30) + '%';
-        sparkle.style.animationDuration = (2 + Math.random() * 2) + 's';
-        
-        sparklesContainer.appendChild(sparkle);
-        
-        setTimeout(() => {
-            if (sparkle.parentNode) {
-                sparkle.parentNode.removeChild(sparkle);
-            }
-        }, 4000);
-    }, 800);
+function startSmileRain() {
+    // Array of smile variations (text and emoji)
+    const smileVariations = ['Smile', '😊', '😄', '😃', '☺️', '🙂', '😁'];
     
-    // Stop sparkles after 12 seconds
-    setTimeout(() => {
-        clearInterval(sparkleInterval);
-    }, 12000);
-}
-
-function startFallingRoses() {
-    // Create roses falling continuously
-    const createRose = () => {
-        const roseElement = document.createElement('div');
-        roseElement.className = 'rose';
-        roseElement.textContent = rose;
+    // Create "Smile" text and emoji falling like rain
+    const createSmileRain = () => {
+        const smileElement = document.createElement('div');
+        smileElement.className = 'smile-rain';
+        
+        // Randomly choose between text or emoji
+        const randomVariation = smileVariations[Math.floor(Math.random() * smileVariations.length)];
+        smileElement.textContent = randomVariation;
         
         // Random horizontal position
         const leftPosition = Math.random() * 100;
-        roseElement.style.left = leftPosition + '%';
+        smileElement.style.left = leftPosition + '%';
         
-        // Random animation duration (4-7 seconds for slower, more elegant fall)
-        const duration = 4 + Math.random() * 3;
-        roseElement.style.animationDuration = duration + 's';
+        // Random animation duration (3-6 seconds for varied speeds)
+        const duration = 3 + Math.random() * 3;
+        smileElement.style.animationDuration = duration + 's';
         
-        // Random delay (0-1.5 seconds)
-        const delay = Math.random() * 1.5;
-        roseElement.style.animationDelay = delay + 's';
+        // Random delay (0-2 seconds for staggered effect)
+        const delay = Math.random() * 2;
+        smileElement.style.animationDelay = delay + 's';
         
-        // Random scale for variety
-        const scale = 0.8 + Math.random() * 0.4;
-        roseElement.style.transform = `scale(${scale})`;
+        // Random font size for variety (smaller for emojis)
+        const isEmoji = randomVariation.length === 1 || randomVariation.length === 2;
+        const fontSize = isEmoji ? (30 + Math.random() * 20) : (24 + Math.random() * 16);
+        smileElement.style.fontSize = fontSize + 'px';
         
-        rosesContainer.appendChild(roseElement);
+        // Random opacity
+        const opacity = 0.6 + Math.random() * 0.4;
+        smileElement.style.opacity = opacity;
         
-        // Remove rose after animation completes
+        smileRainContainer.appendChild(smileElement);
+        
+        // Remove smile element after animation completes
         setTimeout(() => {
-            if (roseElement.parentNode) {
-                roseElement.parentNode.removeChild(roseElement);
+            if (smileElement.parentNode) {
+                smileElement.parentNode.removeChild(smileElement);
             }
         }, (duration + delay) * 1000);
     };
     
-    // Create initial burst of roses
-    for (let i = 0; i < 25; i++) {
-        setTimeout(() => createRose(), i * 150);
+    // Create initial burst of "Smile" rain
+    for (let i = 0; i < 40; i++) {
+        setTimeout(() => createSmileRain(), i * 100);
     }
     
-    // Continue creating roses for 12 seconds
-    const roseInterval = setInterval(() => {
-        createRose();
-    }, 250);
+    // Continue creating smile rain for 8 seconds
+    const smileInterval = setInterval(() => {
+        createSmileRain();
+    }, 150);
     
-    // Stop creating new roses after 12 seconds, but let existing ones finish
+    // Stop creating new smiles after 8 seconds, but let existing ones finish
     setTimeout(() => {
-        clearInterval(roseInterval);
-    }, 12000);
+        clearInterval(smileInterval);
+    }, 8000);
+    
+    // Reveal text progressively as smile rain falls
+    const textRevealDelay = 2000; // Start revealing text after 2 seconds
+    
+    setTimeout(() => {
+        message.innerHTML = `
+            <h1 class="text-reveal">Arike thanna munthiri..<br>Punjiriku yen sundhari...</h1>
+        `;
+        message.classList.add('updated');
+    }, textRevealDelay);
 }
 
