@@ -39,6 +39,7 @@ function initializeBackgroundImage() {
     img2.alt = 'Background';
     img2.className = 'background-image background-image-2';
     img2.style.opacity = '0';
+    img2.style.visibility = 'visible'; // Visible but transparent
     imagesGrid.appendChild(img2);
     
     // Preload all images for smooth transitions
@@ -61,62 +62,93 @@ function startSlideshow() {
     let currentImg = img1;
     let nextImg = img2;
     
-    // Wait for initial fade-in animation to complete, then start slideshow
+    // Wait for initial fade-in animation to complete
     setTimeout(() => {
         img1.classList.add('slideshow-active');
         img2.classList.add('slideshow-active');
         
-        // Preload second image before first transition
+        // Ensure img1 is fully visible before starting
+        img1.style.opacity = '1';
+        img2.style.opacity = '0';
+        
+        // Preload and set second image BEFORE starting slideshow
         currentImageIndex = 0;
         const secondImageSrc = backgroundImages[1];
-        const preloadImg = new Image();
-        preloadImg.onload = () => {
-            // Second image is ready, now start the slideshow
+        
+        // Preload second image
+        const preloadImg2 = new Image();
+        preloadImg2.onload = () => {
+            // Handler for when image is ready
+            const handleImageReady = () => {
+                // Wait for image to be fully rendered (2 frames)
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        // Image is fully loaded and rendered, now start slideshow
+                        startSlideshowInterval();
+                    });
+                });
+            };
+            
+            // Set onload handler BEFORE changing src
+            nextImg.onload = handleImageReady;
             nextImg.src = secondImageSrc;
             
-            // Start slideshow after ensuring second image is loaded
-            setTimeout(() => {
-                // Change image every 3 seconds using crossfade
-                slideshowInterval = setInterval(() => {
-                    currentImageIndex = (currentImageIndex + 1) % backgroundImages.length;
-                    const nextImageSrc = backgroundImages[currentImageIndex];
-                    
-                    // Preload the next image before crossfading
-                    const preloadNext = new Image();
-                    preloadNext.onload = () => {
-                        // Set the next image source on the hidden layer
-                        nextImg.src = nextImageSrc;
-                        
-                        // Small delay to ensure image is rendered
+            // If image is already cached, onload might not fire
+            if (nextImg.complete && nextImg.naturalWidth > 0) {
+                handleImageReady();
+            }
+        };
+        preloadImg2.src = secondImageSrc;
+        
+        function startSlideshowInterval() {
+            // Start the interval for subsequent transitions
+            slideshowInterval = setInterval(() => {
+                currentImageIndex = (currentImageIndex + 1) % backgroundImages.length;
+                const nextImageSrc = backgroundImages[currentImageIndex];
+                
+                // Preload next image
+                const preloadNext = new Image();
+                preloadNext.onload = () => {
+                    // Handler for when image is ready
+                    const doCrossfade = () => {
                         requestAnimationFrame(() => {
-                            // Fade out current image, fade in next image
-                            currentImg.style.opacity = '0';
-                            nextImg.style.opacity = '1';
-                            
-                            // Swap references for next transition
-                            const temp = currentImg;
-                            currentImg = nextImg;
-                            nextImg = temp;
+                            requestAnimationFrame(() => {
+                                // Both images ready, do crossfade
+                                currentImg.style.opacity = '0';
+                                nextImg.style.opacity = '1';
+                                
+                                // Swap references
+                                const temp = currentImg;
+                                currentImg = nextImg;
+                                nextImg = temp;
+                            });
                         });
                     };
-                    preloadNext.src = nextImageSrc;
-                }, 3000);
+                    
+                    // Set onload handler BEFORE changing src
+                    nextImg.onload = doCrossfade;
+                    nextImg.src = nextImageSrc;
+                    
+                    // If image is already cached, onload might not fire
+                    if (nextImg.complete && nextImg.naturalWidth > 0) {
+                        doCrossfade();
+                    }
+                };
+                preloadNext.src = nextImageSrc;
+            }, 3000);
+            
+            // Trigger first transition after 3 seconds
+            setTimeout(() => {
+                currentImageIndex = 1;
+                // First crossfade (img1 -> img2) - image is already loaded
+                currentImg.style.opacity = '0';
+                nextImg.style.opacity = '1';
                 
-                // Trigger first transition after a short delay
-                setTimeout(() => {
-                    currentImageIndex = 1;
-                    requestAnimationFrame(() => {
-                        currentImg.style.opacity = '0';
-                        nextImg.style.opacity = '1';
-                        
-                        const temp = currentImg;
-                        currentImg = nextImg;
-                        nextImg = temp;
-                    });
-                }, 3000);
-            }, 100);
-        };
-        preloadImg.src = secondImageSrc;
+                const temp = currentImg;
+                currentImg = nextImg;
+                nextImg = temp;
+            }, 3000);
+        }
     }, 1500); // Wait for initial animation to complete
 }
 
@@ -257,4 +289,3 @@ function startSmileRain() {
         message.classList.add('updated');
     }, textRevealDelay);
 }
-
