@@ -1,0 +1,7 @@
+# Firebase Configuration (contains sensitive credentials)
+firebase-config.js
+
+# Environment files
+.env
+.env.local
+.env.*.local

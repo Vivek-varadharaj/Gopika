@@ -3,18 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A Rose After Five Questions</title>
+    <title>A Small Ritual</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <!-- Firebase Config - Must be loaded before script.js -->
+    <script src="firebase-config.js"></script>
 </head>
 <body>
     <!-- Landing Screen -->
     <div class="screen landing-screen" id="landingScreen">
         <div class="content-wrapper">
-            <p class="intro-text">A small challenge before a small surprise 🌸</p>
-            <button class="btn-primary" id="startButton">Start Today's Challenge</button>
+            <p class="intro-text">A small ritual for today.</p>
+            <button class="btn-primary" id="startButton">Begin</button>
         </div>
     </div>
 
@@ -22,69 +27,67 @@
     <div class="screen loading-screen hidden" id="loadingScreen">
         <div class="content-wrapper">
             <div class="spinner"></div>
-            <p class="loading-text">Loading today's questions...</p>
+            <p class="loading-text">Loading today's content...</p>
         </div>
     </div>
 
-    <!-- No Questions Screen -->
-    <div class="screen no-questions-screen hidden" id="noQuestionsScreen">
+    <!-- No Content Screen -->
+    <div class="screen no-content-screen hidden" id="noContentScreen">
         <div class="content-wrapper">
-            <p class="message-text">Today's rose is waiting. Come back tomorrow 🌙</p>
+            <p class="message-text">Nothing for today. Come back tomorrow.</p>
             <button class="btn-secondary" id="backToLandingButton1">Back</button>
         </div>
     </div>
 
-    <!-- Quiz Screen -->
-    <div class="screen quiz-screen hidden" id="quizScreen">
+    <!-- Daily Content Screen -->
+    <div class="screen content-screen hidden" id="contentScreen">
         <div class="content-wrapper">
             <div class="progress-indicator">
-                <span id="progressText">Question 1 of 5</span>
+                <span id="progressText">Question 1 of 3</span>
             </div>
             
             <div class="question-container">
                 <h2 class="question-text" id="questionText"></h2>
                 
-                <div class="flip-wrapper">
-                    <div class="flip-container" id="flipContainer">
-                        <div class="flip-card">
-                            <div class="flip-front">
-                                <div class="flip-instruction">Tap to reveal the answer ✨</div>
-                            </div>
-                            <div class="flip-back">
-                                <div class="answer-text" id="answerText"></div>
-                            </div>
+                <div class="answer-wrapper">
+                    <div class="answer-container" id="answerContainer">
+                        <div class="answer-text" id="answerText"></div>
+                        <div class="answer-overlay" id="answerOverlay">
+                            <div class="tap-hint">Tap to reveal the answer</div>
                         </div>
                     </div>
                 </div>
                 
-                <button class="btn-next hidden" id="nextButton">Next Question</button>
+                <button class="btn-next hidden" id="nextButton">Next</button>
             </div>
         </div>
     </div>
 
-    <!-- Reward Screen -->
-    <div class="screen reward-screen hidden" id="rewardScreen">
+    <!-- Daily Completion Screen -->
+    <div class="screen completion-screen hidden" id="completionScreen">
         <div class="content-wrapper">
-            <div class="rose-container">
-                <div class="rose" id="rose">
-                    <div class="rose-petal petal-1"></div>
-                    <div class="rose-petal petal-2"></div>
-                    <div class="rose-petal petal-3"></div>
-                    <div class="rose-petal petal-4"></div>
-                    <div class="rose-petal petal-5"></div>
-                    <div class="rose-petal petal-6"></div>
-                    <div class="rose-center"></div>
-                </div>
-            </div>
-            <p class="reward-text">For your effort, patience, and focus 🌹<br>Come back tomorrow for another one.</p>
+            <p class="completion-text">You showed up today.</p>
+            <button class="btn-secondary" id="backToLandingButton2">Back</button>
         </div>
     </div>
 
     <!-- Daily Lock Screen -->
     <div class="screen lock-screen hidden" id="lockScreen">
         <div class="content-wrapper">
-            <p class="message-text">Today's rose is yours 🌙<br>Come back tomorrow.</p>
-            <button class="btn-secondary" id="backToLandingButton2">Back</button>
+            <p class="message-text">Today's ritual is complete. Come back tomorrow.</p>
+            <button class="btn-secondary" id="backToLandingButton3">Back</button>
+        </div>
+    </div>
+
+    <!-- Final Prize Screen -->
+    <div class="screen prize-screen hidden" id="prizeScreen">
+        <div class="content-wrapper">
+            <div class="prize-container">
+                <div class="book-icon">📖</div>
+                <h1 class="prize-title">Oru Desathinte Katha</h1>
+                <p class="prize-message">For your consistency and presence.</p>
+            </div>
+            <button class="btn-secondary" id="backToLandingButton4">Back</button>
         </div>
     </div>
 

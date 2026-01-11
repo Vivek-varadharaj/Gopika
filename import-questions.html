@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulk Import Questions to Firebase</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196f3;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #555;
+        }
+        input[type="date"] {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            width: 200px;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+        .status-success {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            color: #2e7d32;
+        }
+        .status-error {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+            color: #c62828;
+        }
+        .status-info {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            color: #1565c0;
+        }
+        .progress {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+    </style>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>📥 Bulk Import Questions to Firebase</h1>
+        
+        <div class="info">
+            <strong>Instructions:</strong><br>
+            1. Make sure <code>firebase-config.js</code> is configured with your Firebase credentials<br>
+            2. Select the date for these questions (all questions will use this date)<br>
+            3. Click "Import Questions" to bulk import all 25 questions<br>
+            4. Check the status message below for progress
+        </div>
+
+        <label for="questionDate">Date for all questions (YYYY-MM-DD):</label>
+        <input type="date" id="questionDate" required>
+
+        <button id="importButton" onclick="importQuestions()">Import Questions</button>
+        <button onclick="location.reload()">Reset</button>
+
+        <div id="status"></div>
+    </div>
+
+    <script>
+        // Questions data
+        const questionsData = {
+            "q001": {
+                "question": "Kerala was formed as a state in which year?",
+                "answer": "1956"
+            },
+            "q002": {
+                "question": "Longest river in Kerala?",
+                "answer": "Periyar"
+            },
+            "q003": {
+                "question": "Article related to Right to Equality?",
+                "answer": "Article 14"
+            },
+            "q004": {
+                "question": "Headquarters of WHO?",
+                "answer": "Geneva"
+            },
+            "q005": {
+                "question": "National flower of India?",
+                "answer": "Lotus"
+            },
+            "q006": {
+                "question": "Highest peak in Kerala?",
+                "answer": "Anamudi"
+            },
+            "q007": {
+                "question": "First Chief Minister of Kerala?",
+                "answer": "E. M. S. Namboodiripad"
+            },
+            "q008": {
+                "question": "Smallest district in Kerala by area?",
+                "answer": "Alappuzha"
+            },
+            "q009": {
+                "question": "Indian Parliament consists of which bodies?",
+                "answer": "President, Lok Sabha and Rajya Sabha"
+            },
+            "q010": {
+                "question": "SI unit of electric current?",
+                "answer": "Ampere"
+            },
+            "q011": {
+                "question": "Capital of Australia?",
+                "answer": "Canberra"
+            },
+            "q012": {
+                "question": "Blood group known as universal donor?",
+                "answer": "O"
+            },
+            "q013": {
+                "question": "First woman IPS officer of India?",
+                "answer": "Kiran Bedi"
+            },
+            "q014": {
+                "question": "Who appoints the Governor of a state?",
+                "answer": "President of India"
+            },
+            "q015": {
+                "question": "Planet known as the Red Planet?",
+                "answer": "Mars"
+            },
+            "q016": {
+                "question": "Author of Discovery of India?",
+                "answer": "Jawaharlal Nehru"
+            },
+            "q017": {
+                "question": "National animal of India?",
+                "answer": "Tiger"
+            },
+            "q018": {
+                "question": "First Indian satellite?",
+                "answer": "Aryabhata"
+            },
+            "q019": {
+                "question": "Planning Commission was replaced by?",
+                "answer": "NITI Aayog"
+            },
+            "q020": {
+                "question": "Metal that is liquid at room temperature?",
+                "answer": "Mercury"
+            },
+            "q021": {
+                "question": "Capital of Kerala?",
+                "answer": "Thiruvananthapuram"
+            },
+            "q022": {
+                "question": "Gas essential for respiration?",
+                "answer": "Oxygen"
+            },
+            "q023": {
+                "question": "Longest constitution in the world?",
+                "answer": "India"
+            },
+            "q024": {
+                "question": "Indian space agency?",
+                "answer": "ISRO"
+            },
+            "q025": {
+                "question": "Founder of Buddhism?",
+                "answer": "Gautama Buddha"
+            }
+        };
+
+        let db = null;
+
+        function initializeFirebase() {
+            if (typeof firebase === 'undefined') {
+                showStatus('Firebase SDK not loaded. Make sure the script tags are present.', 'error');
+                return;
+            }
+
+            if (typeof FIREBASE_CONFIG === 'undefined' || FIREBASE_CONFIG.apiKey === 'YOUR_API_KEY') {
+                showStatus('Firebase not configured. Please configure firebase-config.js first.', 'error');
+                return;
+            }
+
+            try {
+                firebase.initializeApp(FIREBASE_CONFIG);
+                db = firebase.firestore();
+                showStatus('Firebase initialized successfully!', 'success');
+                document.getElementById('importButton').disabled = false;
+            } catch (error) {
+                showStatus('Firebase initialization failed: ' + error.message, 'error');
+            }
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = 'status-' + type;
+            statusDiv.style.display = 'block';
+        }
+
+        async function importQuestions() {
+            const dateInput = document.getElementById('questionDate').value;
+            if (!dateInput) {
+                showStatus('Please select a date for the questions.', 'error');
+                return;
+            }
+
+            if (!db) {
+                showStatus('Firebase not initialized. Please check your configuration.', 'error');
+                return;
+            }
+
+            const importButton = document.getElementById('importButton');
+            importButton.disabled = true;
+            showStatus('Starting import...', 'info');
+
+            try {
+                const questions = Object.values(questionsData);
+                let successCount = 0;
+                let errorCount = 0;
+
+                // Import questions one by one
+                for (let i = 0; i < questions.length; i++) {
+                    const q = questions[i];
+                    try {
+                        await db.collection('questions').add({
+                            date: dateInput,
+                            question: q.question,
+                            answer: q.answer
+                        });
+                        successCount++;
+                        showStatus(`Importing... ${successCount}/${questions.length} questions imported`, 'info');
+                    } catch (error) {
+                        errorCount++;
+                        console.error('Error importing question:', q.question, error);
+                    }
+                }
+
+                if (errorCount === 0) {
+                    showStatus(`✅ Successfully imported ${successCount} questions for date ${dateInput}!`, 'success');
+                } else {
+                    showStatus(`⚠️ Imported ${successCount} questions, ${errorCount} errors. Check console for details.`, 'error');
+                }
+            } catch (error) {
+                showStatus('Import failed: ' + error.message, 'error');
+                console.error('Import error:', error);
+            } finally {
+                importButton.disabled = false;
+            }
+        }
+
+        // Initialize Firebase on page load
+        window.addEventListener('load', () => {
+            setTimeout(initializeFirebase, 500); // Small delay to ensure config is loaded
+        });
+    </script>
+</body>
+</html>
