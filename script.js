@@ -39,6 +39,27 @@ function initializeFirebase() {
         auth = firebase.auth();
         console.log('Firebase initialized successfully');
         
+        // Handle redirect result if returning from Google sign-in
+        auth.getRedirectResult().then((result) => {
+            if (result.user) {
+                console.log('Redirect sign-in successful:', result.user.email);
+                // User signed in via redirect
+                resetAllButtonLoadingStates();
+            }
+        }).catch((error) => {
+            console.error('Redirect sign-in error:', error);
+            // Reset button state if there was an error
+            resetAllButtonLoadingStates();
+            if (authError) {
+                let errorMessage = 'Sign-in failed. Please try again.';
+                if (error.code === 'auth/redirect-cancelled-by-user') {
+                    errorMessage = 'Sign-in was cancelled.';
+                }
+                authError.textContent = errorMessage;
+                authError.classList.remove('hidden');
+            }
+        });
+        
         // Listen for auth state changes
         auth.onAuthStateChanged((user) => {
             currentUser = user;
@@ -281,21 +302,20 @@ async function handleGoogleSignIn() {
     
     try {
         console.log('Attempting Google sign-in...');
-        await auth.signInWithPopup(provider);
-        console.log('Google sign-in successful');
-        // Auth state listener will handle navigation
+        // Use redirect instead of popup to avoid COOP policy issues
+        await auth.signInWithRedirect(provider);
+        // Page will redirect to Google, then back to app
+        // Auth state listener will handle navigation on return
     } catch (error) {
-        // Reset button on error
+        // Reset button on error (if redirect fails immediately)
         setButtonLoading(googleSignInButton, false);
         console.error('Google sign-in error:', error);
         
         let errorMessage = 'Failed to sign in with Google';
         
         // Provide more specific error messages
-        if (error.code === 'auth/popup-closed-by-user') {
+        if (error.code === 'auth/redirect-cancelled-by-user') {
             errorMessage = 'Sign-in was cancelled. Please try again.';
-        } else if (error.code === 'auth/popup-blocked') {
-            errorMessage = 'Popup was blocked. Please allow popups and try again.';
         } else if (error.code === 'auth/invalid-credential') {
             errorMessage = 'Google Sign-In is not properly configured. Please check Firebase Console settings.';
         } else if (error.code === 'auth/operation-not-allowed') {
