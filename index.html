@@ -3,43 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>For Shuttumani</title>
+    <title>A Rose After Five Questions</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="camera-container" id="cameraContainer">
-        <video id="video" autoplay playsinline></video>
-        <canvas id="canvas"></canvas>
+    <!-- Landing Screen -->
+    <div class="screen landing-screen" id="landingScreen">
+        <div class="content-wrapper">
+            <p class="intro-text">A small challenge before a small surprise 🌸</p>
+            <button class="btn-primary" id="startButton">Start Today's Challenge</button>
+        </div>
     </div>
-    
-    <div class="container">
-        <div class="message-wrapper">
-            <div class="message" id="message">
-                <h1>Hey Shuttumani</h1>
-                <p>Show me your beautiful smile...</p>
+
+    <!-- Loading Screen -->
+    <div class="screen loading-screen hidden" id="loadingScreen">
+        <div class="content-wrapper">
+            <div class="spinner"></div>
+            <p class="loading-text">Loading today's questions...</p>
+        </div>
+    </div>
+
+    <!-- No Questions Screen -->
+    <div class="screen no-questions-screen hidden" id="noQuestionsScreen">
+        <div class="content-wrapper">
+            <p class="message-text">Today's rose is waiting. Come back tomorrow 🌙</p>
+            <button class="btn-secondary" id="backToLandingButton1">Back</button>
+        </div>
+    </div>
+
+    <!-- Quiz Screen -->
+    <div class="screen quiz-screen hidden" id="quizScreen">
+        <div class="content-wrapper">
+            <div class="progress-indicator">
+                <span id="progressText">Question 1 of 5</span>
+            </div>
+            
+            <div class="question-container">
+                <h2 class="question-text" id="questionText"></h2>
+                
+                <div class="options-container" id="optionsContainer">
+                    <!-- Options will be dynamically inserted here -->
+                </div>
+                
+                <div class="feedback-message hidden" id="feedbackMessage">
+                    Almost there. Try again.
+                </div>
             </div>
         </div>
-        
-        <div class="reward-message" id="rewardMessage">
-            <h2>When you smile you look beautiful! 😊</h2>
-        </div>
-        
-        <div class="smile-indicator" id="smileIndicator">
-            <div class="indicator-text">Keep smiling! ✨</div>
+    </div>
+
+    <!-- Reward Screen -->
+    <div class="screen reward-screen hidden" id="rewardScreen">
+        <div class="content-wrapper">
+            <div class="rose-container">
+                <div class="rose" id="rose">
+                    <div class="rose-petal petal-1"></div>
+                    <div class="rose-petal petal-2"></div>
+                    <div class="rose-petal petal-3"></div>
+                    <div class="rose-petal petal-4"></div>
+                    <div class="rose-petal petal-5"></div>
+                    <div class="rose-petal petal-6"></div>
+                    <div class="rose-center"></div>
+                </div>
+            </div>
+            <p class="reward-text">For your effort, patience, and focus 🌹<br>Come back tomorrow for another one.</p>
         </div>
     </div>
-    
-    <!-- TensorFlow.js -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
-    <!-- MediaPipe Face Mesh -->
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/face_mesh.js"></script>
-    <!-- Face Landmarks Detection -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-landmarks-detection@1.0.6/dist/face-landmarks-detection.min.js"></script>
-    
+
+    <!-- Daily Lock Screen -->
+    <div class="screen lock-screen hidden" id="lockScreen">
+        <div class="content-wrapper">
+            <p class="message-text">Today's rose is yours 🌙<br>Come back tomorrow.</p>
+            <button class="btn-secondary" id="backToLandingButton2">Back</button>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
-
