@@ -74,15 +74,43 @@ body {
     width: 100%;
 }
 
-.btn-primary:hover, .btn-secondary:hover {
+.btn-primary:hover:not(:disabled), .btn-secondary:hover:not(:disabled) {
     transform: translateY(-2px);
     background: var(--primary-hover);
     box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
 }
 
-.btn-primary:active, .btn-secondary:active {
+.btn-primary:active:not(:disabled), .btn-secondary:active:not(:disabled) {
     transform: translateY(0);
     box-shadow: 0 2px 8px rgba(74, 144, 226, 0.2);
+}
+
+.btn-primary:disabled, .btn-secondary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    pointer-events: none;
+}
+
+.btn-primary.loading, .btn-secondary.loading {
+    position: relative;
+    color: transparent;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.btn-primary.loading::after, .btn-secondary.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
 }
 
 .btn-secondary {
@@ -93,9 +121,14 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.btn-secondary:hover {
+.btn-secondary:hover:not(:disabled) {
     background: var(--bg-accent);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-secondary.loading::after {
+    border-color: rgba(44, 62, 80, 0.3);
+    border-top-color: var(--text-primary);
 }
 
 /* Loading Screen */
@@ -246,6 +279,34 @@ body {
 
 .btn-next.hidden {
     display: none;
+}
+
+.btn-next:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    pointer-events: none;
+}
+
+.btn-next.loading {
+    position: relative;
+    color: transparent;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.btn-next.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
 }
 
 /* Message Text */
@@ -535,22 +596,53 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.btn-google:hover {
+.btn-google:hover:not(:disabled) {
     background-color: #fafafa;
     border-color: #dadce0;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     transform: translateY(-1px);
 }
 
-.btn-google:active {
+.btn-google:active:not(:disabled) {
     background-color: #f5f5f5;
     transform: translateY(0);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
+.btn-google:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    pointer-events: none;
+}
+
+.btn-google.loading {
+    position: relative;
+    pointer-events: none;
+}
+
+.btn-google.loading svg {
+    opacity: 0;
+}
+
+.btn-google.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(60, 64, 67, 0.3);
+    border-top-color: #3c4043;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
 .btn-google svg {
     flex-shrink: 0;
     margin-right: 10px;
+    transition: opacity 0.2s ease;
 }
 
 /* Challenges Screen */
@@ -629,6 +721,34 @@ body {
 .start-challenge-btn {
     width: 100%;
     margin-top: 8px;
+}
+
+.start-challenge-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    pointer-events: none;
+}
+
+.start-challenge-btn.loading {
+    position: relative;
+    color: transparent;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.start-challenge-btn.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
 }
 
 /* Mobile Responsive for Challenges */

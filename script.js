@@ -44,9 +44,13 @@ function initializeFirebase() {
             currentUser = user;
             if (user) {
                 console.log('User signed in:', user.email);
+                // Reset all button states when signing in
+                resetAllButtonLoadingStates();
                 showLanding();
             } else {
                 console.log('User signed out');
+                // Reset all button states when signing out
+                resetAllButtonLoadingStates();
                 showAuth();
             }
         });
@@ -148,6 +152,8 @@ function showQuiz() {
 function showAuth() {
     hideAllScreens();
     authScreen.classList.remove('hidden');
+    // Reset all button loading states when showing auth screen
+    resetAllButtonLoadingStates();
     // Clear errors when showing auth screen
     const authError = document.getElementById('authError');
     const signupError = document.getElementById('signupError');
@@ -205,6 +211,65 @@ function showCompletion() {
     showDailyQuestionsCompletion();
 }
 
+// Button loading state utility functions
+function setButtonLoading(button, isLoading, loadingText = null) {
+    if (!button) return;
+    
+    if (isLoading) {
+        button.disabled = true;
+        button.classList.add('loading');
+        if (loadingText) {
+            button.dataset.originalText = button.textContent;
+            button.textContent = loadingText;
+        }
+    } else {
+        button.disabled = false;
+        button.classList.remove('loading');
+        if (button.dataset.originalText) {
+            button.textContent = button.dataset.originalText;
+            delete button.dataset.originalText;
+        }
+    }
+}
+
+function resetButton(button) {
+    if (!button) return;
+    setButtonLoading(button, false);
+}
+
+// Reset all button loading states
+function resetAllButtonLoadingStates() {
+    // Reset authentication buttons
+    resetButton(loginButton);
+    resetButton(signupButton);
+    resetButton(googleLoginButton);
+    resetButton(googleSignupButton);
+    resetButton(logoutButton);
+    
+    // Reset navigation buttons
+    resetButton(startQuestionsButton);
+    resetButton(viewChallengesButton);
+    resetButton(viewMoreChallengesButton);
+    
+    // Reset action buttons
+    resetButton(nextButton);
+    resetButton(quizNextButton);
+    resetButton(shareScreenshotButton);
+    
+    // Reset all start challenge buttons
+    const startChallengeButtons = document.querySelectorAll('.start-challenge-btn');
+    startChallengeButtons.forEach(btn => resetButton(btn));
+    
+    // Reset all quiz option buttons
+    const quizOptionButtons = document.querySelectorAll('.quiz-option');
+    quizOptionButtons.forEach(btn => {
+        if (btn.disabled && !btn.classList.contains('correct') && !btn.classList.contains('incorrect')) {
+            btn.disabled = false;
+            btn.style.cursor = '';
+        }
+    });
+}
+
 
 
 // Authentication functions
@@ -224,10 +289,16 @@ async function handleLogin() {
         return;
     }
     
+    // Hide previous errors and set loading state
+    authError.classList.add('hidden');
+    setButtonLoading(loginButton, true, 'Signing in...');
+    
     try {
         await auth.signInWithEmailAndPassword(email, password);
         // Auth state listener will handle navigation
     } catch (error) {
+        // Reset button on error
+        setButtonLoading(loginButton, false);
         console.error('Login error:', error);
         
         let errorMessage = 'Failed to sign in';
@@ -278,10 +349,16 @@ async function handleSignup() {
         return;
     }
     
+    // Hide previous errors and set loading state
+    signupError.classList.add('hidden');
+    setButtonLoading(signupButton, true, 'Creating account...');
+    
     try {
         await auth.createUserWithEmailAndPassword(email, password);
         // Auth state listener will handle navigation
     } catch (error) {
+        // Reset button on error
+        setButtonLoading(signupButton, false);
         console.error('Signup error:', error);
         
         let errorMessage = 'Failed to create account';
@@ -306,7 +383,7 @@ async function handleSignup() {
     }
 }
 
-async function handleGoogleSignIn() {
+async function handleGoogleSignIn(isSignup = false) {
     if (!auth) {
         const errorMsg = 'Authentication not initialized. Please check Firebase configuration.';
         authError.textContent = errorMsg;
@@ -326,6 +403,14 @@ async function handleGoogleSignIn() {
         return;
     }
     
+    // Determine which button to show loading state for
+    const button = isSignup ? googleSignupButton : googleLoginButton;
+    const errorElement = isSignup ? signupError : authError;
+    
+    // Hide previous errors and set loading state
+    errorElement.classList.add('hidden');
+    setButtonLoading(button, true);
+    
     const provider = new firebase.auth.GoogleAuthProvider();
     
     // Add scopes if needed
@@ -336,6 +421,8 @@ async function handleGoogleSignIn() {
         await auth.signInWithPopup(provider);
         // Auth state listener will handle navigation
     } catch (error) {
+        // Reset button on error
+        setButtonLoading(button, false);
         console.error('Google sign-in error:', error);
         
         let errorMessage = 'Failed to sign in with Google';
@@ -361,11 +448,13 @@ async function handleGoogleSignIn() {
 }
 
 async function handleLogout() {
+    setButtonLoading(logoutButton, true, 'Signing out...');
     try {
         await auth.signOut();
-        // Auth state listener will handle navigation
+        // Auth state listener will handle navigation and reset button states
     } catch (error) {
         console.error('Logout error:', error);
+        setButtonLoading(logoutButton, false);
     }
 }
 
@@ -529,21 +618,28 @@ function revealAnswer() {
 
 // Handle next question (for daily questions)
 async function handleNext() {
-    const currentQuestion = selectedQuestions[currentQuestionIndex];
-    
-    // Mark current question as completed
-    if (currentQuestion && currentQuestion.id) {
-        await markQuestionCompleted(currentQuestion.id);
-    }
-    
-    currentQuestionIndex++;
-    
-    if (currentQuestionIndex >= selectedQuestions.length) {
-        // All questions completed
-        showDailyQuestionsCompletion();
-    } else {
-        // Render next question
-        renderQuestion();
+    setButtonLoading(nextButton, true, 'Loading...');
+    try {
+        const currentQuestion = selectedQuestions[currentQuestionIndex];
+        
+        // Mark current question as completed
+        if (currentQuestion && currentQuestion.id) {
+            await markQuestionCompleted(currentQuestion.id);
+        }
+        
+        currentQuestionIndex++;
+        
+        if (currentQuestionIndex >= selectedQuestions.length) {
+            // All questions completed
+            showDailyQuestionsCompletion();
+        } else {
+            // Render next question
+            renderQuestion();
+        }
+        setButtonLoading(nextButton, false);
+    } catch (error) {
+        console.error('Error in handleNext:', error);
+        setButtonLoading(nextButton, false);
     }
 }
 
@@ -571,7 +667,7 @@ function renderChallenges(challenges) {
         `;
         
         const startBtn = challengeCard.querySelector('.start-challenge-btn');
-        startBtn.addEventListener('click', () => startChallenge(challenge));
+        startBtn.addEventListener('click', () => startChallenge(challenge, startBtn));
         
         challengesList.appendChild(challengeCard);
     });
@@ -674,21 +770,35 @@ async function getAvailableQuestions(questions) {
 }
 
 // Start a challenge (quiz)
-async function startChallenge(challenge) {
-    currentChallenge = challenge;
-    currentChallengeQuestions = challenge.questions || [];
-    currentQuizQuestionIndex = 0;
-    selectedQuizAnswer = null;
-    quizScore = 0;
+async function startChallenge(challenge, buttonElement = null) {
+    // Find the button that was clicked
+    const button = buttonElement || document.querySelector(`[data-challenge-id="${challenge.challengeId}"]`);
     
-    if (currentChallengeQuestions.length === 0) {
-        console.error('Challenge has no questions');
-        showNoContent('This challenge has no questions available.');
-        return;
+    if (button && button.classList.contains('start-challenge-btn')) {
+        setButtonLoading(button, true, 'Loading...');
     }
     
-    showQuiz();
-    renderQuizQuestion();
+    try {
+        currentChallenge = challenge;
+        currentChallengeQuestions = challenge.questions || [];
+        currentQuizQuestionIndex = 0;
+        selectedQuizAnswer = null;
+        quizScore = 0;
+        
+        if (currentChallengeQuestions.length === 0) {
+            console.error('Challenge has no questions');
+            showNoContent('This challenge has no questions available.');
+            if (button) setButtonLoading(button, false);
+            return;
+        }
+        
+        showQuiz();
+        renderQuizQuestion();
+        if (button) setButtonLoading(button, false);
+    } catch (error) {
+        console.error('Error starting challenge:', error);
+        if (button) setButtonLoading(button, false);
+    }
 }
 
 // Render quiz question
@@ -765,18 +875,25 @@ function selectQuizAnswer(selectedIndex, correctIndex) {
 
 // Handle next quiz question
 async function handleQuizNext() {
-    currentQuizQuestionIndex++;
-    
-    if (currentQuizQuestionIndex >= currentChallengeQuestions.length) {
-        // All questions completed
-        if (currentChallenge && currentChallenge.challengeId) {
-            await markChallengeCompleted(currentChallenge.challengeId);
+    setButtonLoading(quizNextButton, true, 'Loading...');
+    try {
+        currentQuizQuestionIndex++;
+        
+        if (currentQuizQuestionIndex >= currentChallengeQuestions.length) {
+            // All questions completed
+            if (currentChallenge && currentChallenge.challengeId) {
+                await markChallengeCompleted(currentChallenge.challengeId);
+            }
+            // Show completion with score
+            showChallengeCompletion();
+        } else {
+            // Render next question
+            renderQuizQuestion();
         }
-        // Show completion with score
-        showChallengeCompletion();
-                } else {
-        // Render next question
-        renderQuizQuestion();
+        setButtonLoading(quizNextButton, false);
+    } catch (error) {
+        console.error('Error in handleQuizNext:', error);
+        setButtonLoading(quizNextButton, false);
     }
 }
 
@@ -863,6 +980,14 @@ signUpTab.addEventListener('click', () => switchTab('signup'));
 loginButton.addEventListener('click', handleLogin);
 signupButton.addEventListener('click', handleSignup);
 logoutButton.addEventListener('click', handleLogout);
+
+// Google sign-in button handlers
+if (googleLoginButton) {
+    googleLoginButton.addEventListener('click', () => handleGoogleSignIn(false));
+}
+if (googleSignupButton) {
+    googleSignupButton.addEventListener('click', () => handleGoogleSignIn(true));
+}
 
 // Start daily questions
 startQuestionsButton.addEventListener('click', async () => {
@@ -1010,10 +1135,7 @@ async function captureAndShareScreenshot() {
         }
 
         // Show loading state
-        if (shareScreenshotButton) {
-            shareScreenshotButton.disabled = true;
-            shareScreenshotButton.textContent = 'Capturing...';
-        }
+        setButtonLoading(shareScreenshotButton, true, 'Capturing...');
 
         // Capture the completion content as canvas
         const canvas = await html2canvas(completionContent, {
@@ -1027,10 +1149,7 @@ async function captureAndShareScreenshot() {
         canvas.toBlob(async (blob) => {
             if (!blob) {
                 console.error('Failed to create image blob');
-                if (shareScreenshotButton) {
-                    shareScreenshotButton.disabled = false;
-                    shareScreenshotButton.textContent = 'Share Screenshot';
-                }
+                setButtonLoading(shareScreenshotButton, false);
                 return;
             }
 
@@ -1045,10 +1164,7 @@ async function captureAndShareScreenshot() {
                             text: 'I completed a challenge!'
                         });
                         // Reset button
-                        if (shareScreenshotButton) {
-                            shareScreenshotButton.disabled = false;
-                            shareScreenshotButton.textContent = 'Share Screenshot';
-                        }
+                        setButtonLoading(shareScreenshotButton, false);
                         return;
                     }
                 } catch (shareError) {
@@ -1061,18 +1177,12 @@ async function captureAndShareScreenshot() {
             downloadScreenshot(blob);
             
             // Reset button
-            if (shareScreenshotButton) {
-                shareScreenshotButton.disabled = false;
-                shareScreenshotButton.textContent = 'Share Screenshot';
-            }
+            setButtonLoading(shareScreenshotButton, false);
         }, 'image/png');
     } catch (error) {
         console.error('Error capturing screenshot:', error);
         alert('Failed to capture screenshot. Please try again.');
-        if (shareScreenshotButton) {
-            shareScreenshotButton.disabled = false;
-            shareScreenshotButton.textContent = 'Share Screenshot';
-        }
+        setButtonLoading(shareScreenshotButton, false);
     }
 }
 
