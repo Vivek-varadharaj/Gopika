@@ -48,10 +48,20 @@
                     <!-- Options will be dynamically inserted here -->
                 </div>
                 
+                <button class="btn-submit hidden" id="submitButton">Submit</button>
+                
                 <div class="feedback-message hidden" id="feedbackMessage">
                     Almost there. Try again.
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Success Popup -->
+    <div class="popup-overlay hidden" id="successPopup">
+        <div class="popup-content">
+            <p class="popup-message" id="successMessage"></p>
+            <p class="popup-submessage hidden" id="nextQuestionMessage">Going to next question</p>
         </div>
     </div>
 

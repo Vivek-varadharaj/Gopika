@@ -22,6 +22,14 @@ const progressText = document.getElementById('progressText');
 const questionText = document.getElementById('questionText');
 const optionsContainer = document.getElementById('optionsContainer');
 const feedbackMessage = document.getElementById('feedbackMessage');
+const successPopup = document.getElementById('successPopup');
+const successMessage = document.getElementById('successMessage');
+const nextQuestionMessage = document.getElementById('nextQuestionMessage');
+const submitButton = document.getElementById('submitButton');
+
+// State for selected option
+let selectedOption = null;
+const questionContainer = document.querySelector('.question-container');
 
 // Utility functions
 function getTodayDate() {
@@ -30,6 +38,58 @@ function getTodayDate() {
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+}
+
+function parseGoogleSheetsDate(dateValue) {
+    // Handle Date objects directly
+    if (dateValue instanceof Date) {
+        const year = dateValue.getFullYear();
+        const month = String(dateValue.getMonth() + 1).padStart(2, '0');
+        const day = String(dateValue.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+    
+    // Handle Date string format: "Date(2026,0,11)"
+    const dateStr = dateValue.toString();
+    const dateMatch = dateStr.match(/Date\((\d+),(\d+),(\d+)\)/);
+    if (dateMatch) {
+        const year = parseInt(dateMatch[1], 10);
+        const month = String(parseInt(dateMatch[2], 10) + 1).padStart(2, '0'); // Month is 0-indexed
+        const day = String(parseInt(dateMatch[3], 10)).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+    
+    // Handle numeric date (Google Sheets serial date format)
+    if (typeof dateValue === 'number') {
+        // Google Sheets epoch is December 30, 1899
+        const epoch = new Date(1899, 11, 30);
+        const date = new Date(epoch.getTime() + dateValue * 24 * 60 * 60 * 1000);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+    
+    // If it's already in YYYY-MM-DD format, return as is
+    if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue.trim())) {
+        return dateValue.trim();
+    }
+    
+    // Fallback: try to parse as regular date string
+    try {
+        const date = new Date(dateValue);
+        if (!isNaN(date.getTime())) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+    } catch (e) {
+        // Ignore parse errors
+    }
+    
+    // Last resort: return as string
+    return dateValue.toString().trim();
 }
 
 function getStoredCompletionDate() {
@@ -58,7 +118,8 @@ async function fetchQuestionsFromGoogleSheet() {
         
         // Handle different URL formats
         if (sheetUrl.includes('/edit')) {
-            sheetUrl = sheetUrl.replace('/edit', '/gviz/tq?tqx=out:json');
+            // Remove query parameters and replace /edit with JSON export endpoint
+            sheetUrl = sheetUrl.split('?')[0].replace('/edit', '/gviz/tq?tqx=out:json');
         } else if (!sheetUrl.includes('/gviz/tq')) {
             // Extract sheet ID from URL
             const match = sheetUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
@@ -102,32 +163,42 @@ async function fetchQuestionsFromGoogleSheet() {
             const row = rows[i];
             const cells = row.c;
             
-            if (cells && cells.length >= 7) {
-                const date = cells[0]?.v || '';
-                const question = cells[1]?.v || '';
-                const optionA = cells[2]?.v || '';
-                const optionB = cells[3]?.v || '';
-                const optionC = cells[4]?.v || '';
-                const optionD = cells[5]?.v || '';
-                const correctOption = cells[6]?.v || '';
-
-                // Validate that all fields are present
-                if (date && question && optionA && optionB && optionC && optionD && correctOption) {
-                    // Validate correctOption format
-                    const upperCorrect = correctOption.toString().toUpperCase().trim();
-                    if (['A', 'B', 'C', 'D'].includes(upperCorrect)) {
-                        questions.push({
-                            date: date.toString().trim(),
-                            question: question.toString().trim(),
-                            optionA: optionA.toString().trim(),
-                            optionB: optionB.toString().trim(),
-                            optionC: optionC.toString().trim(),
-                            optionD: optionD.toString().trim(),
-                            correctOption: upperCorrect
-                        });
-                    }
-                }
+            if (!cells || cells.length < 7) {
+                continue;
             }
+            
+            const dateValue = cells[0]?.v;
+            const question = cells[1]?.v || '';
+            const optionA = cells[2]?.v || '';
+            const optionB = cells[3]?.v || '';
+            const optionC = cells[4]?.v || '';
+            const optionD = cells[5]?.v || '';
+            const correctOption = cells[6]?.v || '';
+
+            // Skip if any essential field is missing
+            if (!dateValue || !question || !optionA || !optionB || !optionC || !optionD || !correctOption) {
+                continue;
+            }
+
+            // Parse and format the date
+            const date = parseGoogleSheetsDate(dateValue);
+            
+            // Validate correctOption format
+            const upperCorrect = correctOption.toString().toUpperCase().trim();
+            if (!['A', 'B', 'C', 'D'].includes(upperCorrect)) {
+                continue;
+            }
+            
+            // All validations passed - add the question
+            questions.push({
+                date: date,
+                question: question.toString().trim(),
+                optionA: optionA.toString().trim(),
+                optionB: optionB.toString().trim(),
+                optionC: optionC.toString().trim(),
+                optionD: optionD.toString().trim(),
+                correctOption: upperCorrect
+            });
         }
 
         return questions;
@@ -189,10 +260,22 @@ function showLock() {
 
 // Quiz logic
 function renderQuestion() {
+    // Validate we have a question
+    if (!selectedQuestions || selectedQuestions.length === 0 || currentQuestionIndex >= selectedQuestions.length) {
+        console.error('No question available at index:', currentQuestionIndex);
+        return;
+    }
+    
     const question = selectedQuestions[currentQuestionIndex];
+    if (!question) {
+        console.error('Question is undefined at index:', currentQuestionIndex);
+        return;
+    }
+    
+    const questionContainer = document.querySelector('.question-container');
     
     // Update progress
-    progressText.textContent = `Question ${currentQuestionIndex + 1} of 5`;
+    progressText.textContent = `Question ${currentQuestionIndex + 1} of ${selectedQuestions.length}`;
     
     // Update question text
     questionText.textContent = question.question;
@@ -200,6 +283,25 @@ function renderQuestion() {
     // Clear options
     optionsContainer.innerHTML = '';
     feedbackMessage.classList.add('hidden');
+    feedbackMessage.classList.remove('congrats-message');
+    feedbackMessage.classList.remove('error-message');
+    
+    // Add fade-in animation (only if not the first question)
+    if (questionContainer) {
+        questionContainer.classList.remove('fade-out');
+        // Only animate if this is not the initial render (when currentQuestionIndex > 0)
+        if (currentQuestionIndex > 0) {
+            questionContainer.classList.add('fade-in');
+            // Remove fade-in class after animation completes to allow re-animation
+            setTimeout(() => {
+                questionContainer.classList.remove('fade-in');
+            }, 400);
+        } else {
+            // First question - ensure it's visible without animation
+            questionContainer.style.opacity = '1';
+            questionContainer.style.transform = 'translateY(0)';
+        }
+    }
     
     // Create option buttons
     const options = [
@@ -213,31 +315,133 @@ function renderQuestion() {
         const button = document.createElement('button');
         button.className = 'option-button';
         button.textContent = `${option.key}. ${option.text}`;
-        button.addEventListener('click', () => handleAnswer(option.key));
+        button.dataset.option = option.key;
+        button.classList.remove('selected', 'correct'); // Remove any previous classes
+        button.addEventListener('click', () => selectOption(option.key));
         optionsContainer.appendChild(button);
+    });
+    
+    // Reset submit button
+    submitButton.classList.add('hidden');
+    submitButton.disabled = false;
+    selectedOption = null;
+}
+
+function selectOption(optionKey) {
+    if (selectedOption === optionKey) {
+        // Deselect if clicking the same option
+        selectedOption = null;
+        submitButton.classList.add('hidden');
+    } else {
+        // Select new option
+        selectedOption = optionKey;
+        submitButton.classList.remove('hidden');
+    }
+    
+    // Update visual selection
+    const buttons = optionsContainer.querySelectorAll('.option-button');
+    buttons.forEach(btn => {
+        if (btn.dataset.option === selectedOption) {
+            btn.classList.add('selected');
+        } else {
+            btn.classList.remove('selected');
+        }
     });
 }
 
-function handleAnswer(selectedOption) {
+function handleSubmit() {
+    if (!selectedOption) return;
+    
     const question = selectedQuestions[currentQuestionIndex];
     const isCorrect = selectedOption.toUpperCase() === question.correctOption.toUpperCase();
     
+    // Disable submit button and option buttons
+    submitButton.disabled = true;
+    const buttons = optionsContainer.querySelectorAll('.option-button');
+    buttons.forEach(btn => {
+        btn.style.pointerEvents = 'none';
+    });
+    
     if (isCorrect) {
-        // Correct answer - move to next question
-        currentQuestionIndex++;
+        // Find and highlight the selected button
+        const selectedButton = Array.from(buttons).find(btn => 
+            btn.dataset.option === selectedOption
+        );
         
-        if (currentQuestionIndex < selectedQuestions.length) {
-            // More questions to go
-            setTimeout(() => {
-                renderQuestion();
-            }, 300);
-        } else {
-            // All questions answered correctly
-            handleQuizCompletion();
+        if (selectedButton) {
+            selectedButton.classList.remove('selected');
+            selectedButton.classList.add('correct');
         }
+        
+        // Show congratulatory message based on question number
+        const congratsMessages = [
+            "Shuttumani pwolich",
+            "Shuttuman pinnem pwolich",
+            "Shuttumani pwoliyo pwoli",
+            "Dhe shuttumani veendum pwolich",
+            "5 um padichallo.... hmmm pokko... "
+        ];
+        
+        const questionNumber = currentQuestionIndex; // 0-indexed, so 0=1st question, 4=5th question
+        const message = congratsMessages[questionNumber];
+        
+        // Check if there are more questions
+        const hasMoreQuestions = currentQuestionIndex + 1 < selectedQuestions.length;
+        
+        // Wait for success animation, then show popup
+        setTimeout(() => {
+            // Show success popup
+            successMessage.textContent = message;
+            if (hasMoreQuestions) {
+                nextQuestionMessage.classList.remove('hidden');
+            } else {
+                nextQuestionMessage.classList.add('hidden');
+            }
+            successPopup.classList.remove('hidden');
+            
+            // Correct answer - animate out, then move to next question
+            const questionContainer = document.querySelector('.question-container');
+            if (questionContainer) {
+                questionContainer.classList.add('fade-out');
+                questionContainer.classList.remove('fade-in');
+            }
+            
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex < selectedQuestions.length) {
+                // More questions to go - wait for popup, then show next question
+                setTimeout(() => {
+                    successPopup.classList.add('hidden');
+                    renderQuestion();
+                }, 2000); // Show popup for 2 seconds
+            } else {
+                // All questions answered correctly
+                setTimeout(() => {
+                    successPopup.classList.add('hidden');
+                    handleQuizCompletion();
+                }, 2000);
+            }
+        }, 600); // Wait for success animation to complete
     } else {
         // Wrong answer - show feedback
+        feedbackMessage.textContent = "Almost there. Try again.";
         feedbackMessage.classList.remove('hidden');
+        feedbackMessage.classList.remove('congrats-message');
+        feedbackMessage.classList.add('error-message');
+        
+        // Re-enable selection after showing error
+        setTimeout(() => {
+            buttons.forEach(btn => {
+                btn.style.pointerEvents = 'auto';
+            });
+            submitButton.disabled = false;
+            selectedOption = null;
+            submitButton.classList.add('hidden');
+            // Remove selected class from all buttons
+            buttons.forEach(btn => {
+                btn.classList.remove('selected');
+            });
+        }, 1500);
     }
 }
 
@@ -282,7 +486,10 @@ startButton.addEventListener('click', async () => {
         // Show quiz
         setTimeout(() => {
             showQuiz();
-            renderQuestion();
+            // Small delay to ensure DOM is ready before rendering first question
+            setTimeout(() => {
+                renderQuestion();
+            }, 100);
         }, 500);
         
     } catch (error) {
@@ -301,11 +508,13 @@ backToLandingButton2.addEventListener('click', () => {
     showLanding();
 });
 
+submitButton.addEventListener('click', handleSubmit);
+
 // Check on page load if already completed today
 window.addEventListener('load', () => {
     if (hasCompletedToday()) {
         showLock();
-    } else {
+        } else {
         showLanding();
     }
 });
