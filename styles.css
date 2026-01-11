@@ -257,6 +257,35 @@ body {
     margin-bottom: 20px;
 }
 
+/* Completion Screen Styles */
+.completion-icon {
+    font-size: 100px;
+    margin-bottom: 30px;
+    animation: celebrationBounce 0.8s ease-out;
+    line-height: 1;
+}
+
+.completion-title {
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+    line-height: 1.4;
+    animation: fadeInUp 0.6s ease-out 0.2s both;
+}
+
+.completion-message {
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    line-height: 1.8;
+    margin-bottom: 30px;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+    animation: fadeInUp 0.6s ease-out 0.4s both;
+}
+
 .completion-text {
     font-size: 28px;
     font-weight: 400;
@@ -312,6 +341,34 @@ body {
     from {
         opacity: 0;
         transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes celebrationBounce {
+    0% {
+        opacity: 0;
+        transform: scale(0.3) translateY(-50px);
+    }
+    50% {
+        transform: scale(1.1) translateY(0);
+    }
+    70% {
+        transform: scale(0.95) translateY(0);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
     }
     to {
         opacity: 1;

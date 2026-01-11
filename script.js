@@ -88,6 +88,9 @@ const backToLandingButton1 = document.getElementById('backToLandingButton1');
 const backToLandingButton2 = document.getElementById('backToLandingButton2');
 const shareScreenshotButton = document.getElementById('shareScreenshotButton');
 const completionContent = document.getElementById('completionContent');
+const completionIcon = document.getElementById('completionIcon');
+const completionTitle = document.getElementById('completionTitle');
+const completionMessage = document.getElementById('completionMessage');
 const progressText = document.getElementById('progressText');
 const questionText = document.getElementById('questionText');
 const answerText = document.getElementById('answerText');
@@ -767,13 +770,19 @@ function showDailyQuestionsCompletion() {
     completionScreen.classList.remove('hidden');
     isDailyQuestionsMode = false;
     
-    const completionText = document.querySelector('.completion-text');
     const viewMoreBtn = document.getElementById('viewMoreChallengesButton');
     const backBtn = document.getElementById('backToLandingButton2');
     const shareBtn = document.getElementById('shareScreenshotButton');
     
-    if (completionText) {
-        completionText.textContent = 'You showed up today. ✨';
+    // Set celebratory content
+    if (completionIcon) {
+        completionIcon.textContent = '✨';
+    }
+    if (completionTitle) {
+        completionTitle.textContent = 'You completed every question!';
+    }
+    if (completionMessage) {
+        completionMessage.textContent = 'Congrats! Share this milestone.';
     }
     
     // Show share button for daily questions
@@ -798,14 +807,22 @@ function showChallengeCompletion() {
     completionScreen.classList.remove('hidden');
     isDailyQuestionsMode = false;
     
-    const completionText = document.querySelector('.completion-text');
     const viewMoreBtn = document.getElementById('viewMoreChallengesButton');
     const backBtn = document.getElementById('backToLandingButton2');
     const shareBtn = document.getElementById('shareScreenshotButton');
     
-    if (completionText) {
-        const percentage = Math.round((quizScore / currentChallengeQuestions.length) * 100);
-        completionText.textContent = `Challenge Complete! 🎉\nScore: ${quizScore}/${currentChallengeQuestions.length} (${percentage}%)`;
+    // Calculate score and percentage
+    const percentage = Math.round((quizScore / currentChallengeQuestions.length) * 100);
+    
+    // Set celebratory content
+    if (completionIcon) {
+        completionIcon.textContent = '🎉';
+    }
+    if (completionTitle) {
+        completionTitle.textContent = 'Challenge Complete!';
+    }
+    if (completionMessage) {
+        completionMessage.textContent = `You scored ${quizScore} out of ${currentChallengeQuestions.length} (${percentage}%). Great work! Share this achievement.`;
     }
     
     // Show share button for challenges
