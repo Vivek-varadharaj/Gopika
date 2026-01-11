@@ -20,15 +20,12 @@ const backToLandingButton1 = document.getElementById('backToLandingButton1');
 const backToLandingButton2 = document.getElementById('backToLandingButton2');
 const progressText = document.getElementById('progressText');
 const questionText = document.getElementById('questionText');
-const optionsContainer = document.getElementById('optionsContainer');
-const feedbackMessage = document.getElementById('feedbackMessage');
-const successPopup = document.getElementById('successPopup');
-const successMessage = document.getElementById('successMessage');
-const nextQuestionMessage = document.getElementById('nextQuestionMessage');
-const submitButton = document.getElementById('submitButton');
+const flipContainer = document.getElementById('flipContainer');
+let answerText = document.getElementById('answerText');
+const nextButton = document.getElementById('nextButton');
 
-// State for selected option
-let selectedOption = null;
+// Tap to reveal state
+let isRevealed = false;
 const questionContainer = document.querySelector('.question-container');
 
 // Utility functions
@@ -280,11 +277,20 @@ function renderQuestion() {
     // Update question text
     questionText.textContent = question.question;
     
-    // Clear options
-    optionsContainer.innerHTML = '';
-    feedbackMessage.classList.add('hidden');
-    feedbackMessage.classList.remove('congrats-message');
-    feedbackMessage.classList.remove('error-message');
+    // Get the correct answer text
+    const correctAnswer = question[`option${question.correctOption}`];
+    
+    // Reset state
+    nextButton.classList.add('hidden');
+    isRevealed = false;
+    
+    // Reset flip card
+    if (flipContainer) {
+        const card = flipContainer.querySelector('.flip-card');
+        if (card) {
+            card.classList.remove('flipped');
+        }
+    }
     
     // Add fade-in animation (only if not the first question)
     if (questionContainer) {
@@ -303,145 +309,76 @@ function renderQuestion() {
         }
     }
     
-    // Create option buttons
-    const options = [
-        { key: 'A', text: question.optionA },
-        { key: 'B', text: question.optionB },
-        { key: 'C', text: question.optionC },
-        { key: 'D', text: question.optionD }
-    ];
-    
-    options.forEach(option => {
-        const button = document.createElement('button');
-        button.className = 'option-button';
-        button.textContent = `${option.key}. ${option.text}`;
-        button.dataset.option = option.key;
-        button.classList.remove('selected', 'correct'); // Remove any previous classes
-        button.addEventListener('click', () => selectOption(option.key));
-        optionsContainer.appendChild(button);
-    });
-    
-    // Reset submit button
-    submitButton.classList.add('hidden');
-    submitButton.disabled = false;
-    selectedOption = null;
+    // Initialize flip card - use delay to ensure DOM is ready
+    setTimeout(() => {
+        initFlipCard(correctAnswer);
+    }, 200);
 }
 
-function selectOption(optionKey) {
-    if (selectedOption === optionKey) {
-        // Deselect if clicking the same option
-        selectedOption = null;
-        submitButton.classList.add('hidden');
-    } else {
-        // Select new option
-        selectedOption = optionKey;
-        submitButton.classList.remove('hidden');
+function initFlipCard(correctAnswer) {
+    if (!flipContainer) return;
+    
+    const card = flipContainer.querySelector('.flip-card');
+    if (!card) return;
+    
+    // Remove old event listeners by cloning
+    const newCard = card.cloneNode(true);
+    card.parentNode.replaceChild(newCard, card);
+    
+    const newCardElement = flipContainer.querySelector('.flip-card');
+    
+    // Update answer text after cloning - get fresh reference
+    const newAnswerText = document.getElementById('answerText');
+    if (newAnswerText && correctAnswer) {
+        newAnswerText.textContent = correctAnswer;
     }
     
-    // Update visual selection
-    const buttons = optionsContainer.querySelectorAll('.option-button');
-    buttons.forEach(btn => {
-        if (btn.dataset.option === selectedOption) {
-            btn.classList.add('selected');
-        } else {
-            btn.classList.remove('selected');
-        }
+    // Add tap/click event listener to flip the card
+    newCardElement.addEventListener('click', flipCardToReveal);
+    newCardElement.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        flipCardToReveal();
     });
 }
 
-function handleSubmit() {
-    if (!selectedOption) return;
+function flipCardToReveal() {
+    if (isRevealed) return;
     
-    const question = selectedQuestions[currentQuestionIndex];
-    const isCorrect = selectedOption.toUpperCase() === question.correctOption.toUpperCase();
+    isRevealed = true;
     
-    // Disable submit button and option buttons
-    submitButton.disabled = true;
-    const buttons = optionsContainer.querySelectorAll('.option-button');
-    buttons.forEach(btn => {
-        btn.style.pointerEvents = 'none';
-    });
+    // Flip the card
+    const card = flipContainer.querySelector('.flip-card');
+    if (card) {
+        card.classList.add('flipped');
+    }
     
-    if (isCorrect) {
-        // Find and highlight the selected button
-        const selectedButton = Array.from(buttons).find(btn => 
-            btn.dataset.option === selectedOption
-        );
-        
-        if (selectedButton) {
-            selectedButton.classList.remove('selected');
-            selectedButton.classList.add('correct');
-        }
-        
-        // Show congratulatory message based on question number
-        const congratsMessages = [
-            "Shuttumani pwolich",
-            "Shuttuman pinnem pwolich",
-            "Shuttumani pwoliyo pwoli",
-            "Dhe shuttumani veendum pwolich",
-            "5 um padichallo.... hmmm pokko... "
-        ];
-        
-        const questionNumber = currentQuestionIndex; // 0-indexed, so 0=1st question, 4=5th question
-        const message = congratsMessages[questionNumber];
-        
-        // Check if there are more questions
-        const hasMoreQuestions = currentQuestionIndex + 1 < selectedQuestions.length;
-        
-        // Wait for success animation, then show popup
+    // Show next button after flip animation
+    setTimeout(() => {
+        nextButton.classList.remove('hidden');
+    }, 400);
+}
+
+function handleNext() {
+    if (nextButton.classList.contains('hidden')) return;
+    
+    // Animate out current question
+    if (questionContainer) {
+        questionContainer.classList.add('fade-out');
+        questionContainer.classList.remove('fade-in');
+    }
+    
+    currentQuestionIndex++;
+    
+    if (currentQuestionIndex < selectedQuestions.length) {
+        // More questions to go
         setTimeout(() => {
-            // Show success popup
-            successMessage.textContent = message;
-            if (hasMoreQuestions) {
-                nextQuestionMessage.classList.remove('hidden');
-            } else {
-                nextQuestionMessage.classList.add('hidden');
-            }
-            successPopup.classList.remove('hidden');
-            
-            // Correct answer - animate out, then move to next question
-            const questionContainer = document.querySelector('.question-container');
-            if (questionContainer) {
-                questionContainer.classList.add('fade-out');
-                questionContainer.classList.remove('fade-in');
-            }
-            
-            currentQuestionIndex++;
-            
-            if (currentQuestionIndex < selectedQuestions.length) {
-                // More questions to go - wait for popup, then show next question
-                setTimeout(() => {
-                    successPopup.classList.add('hidden');
-                    renderQuestion();
-                }, 2000); // Show popup for 2 seconds
-            } else {
-                // All questions answered correctly
-                setTimeout(() => {
-                    successPopup.classList.add('hidden');
-                    handleQuizCompletion();
-                }, 2000);
-            }
-        }, 600); // Wait for success animation to complete
+            renderQuestion();
+        }, 300);
     } else {
-        // Wrong answer - show feedback
-        feedbackMessage.textContent = "Almost there. Try again.";
-        feedbackMessage.classList.remove('hidden');
-        feedbackMessage.classList.remove('congrats-message');
-        feedbackMessage.classList.add('error-message');
-        
-        // Re-enable selection after showing error
+        // All questions completed
         setTimeout(() => {
-            buttons.forEach(btn => {
-                btn.style.pointerEvents = 'auto';
-            });
-            submitButton.disabled = false;
-            selectedOption = null;
-            submitButton.classList.add('hidden');
-            // Remove selected class from all buttons
-            buttons.forEach(btn => {
-                btn.classList.remove('selected');
-            });
-        }, 1500);
+            handleQuizCompletion();
+        }, 300);
     }
 }
 
@@ -508,7 +445,7 @@ backToLandingButton2.addEventListener('click', () => {
     showLanding();
 });
 
-submitButton.addEventListener('click', handleSubmit);
+nextButton.addEventListener('click', handleNext);
 
 // Check on page load if already completed today
 window.addEventListener('load', () => {

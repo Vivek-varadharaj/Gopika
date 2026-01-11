@@ -154,6 +154,9 @@ body {
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
     border: 1px solid var(--border-color);
     transition: opacity 0.3s ease, transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .question-container.fade-out {
@@ -173,66 +176,105 @@ body {
     line-height: 1.6;
 }
 
-.options-container {
+/* Flip Card Wrapper */
+.flip-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    margin-bottom: 25px;
+    align-items: center;
+    margin: 30px 0;
+    width: 100%;
 }
 
-.option-button {
+.flip-container {
+    perspective: 1000px;
+    width: 100%;
+    max-width: 500px;
+    min-width: 300px;
+    height: 120px;
+}
+
+.flip-card {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-width: 300px;
+    transform-style: preserve-3d;
+    transition: transform 0.6s;
+    cursor: pointer;
+}
+
+.flip-card.flipped {
+    transform: rotateY(180deg);
+}
+
+.flip-front,
+.flip-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.flip-front {
+    background: linear-gradient(135deg, #f5f5dc 0%, #f0e6d2 100%);
+    border: 2px solid rgba(139, 69, 19, 0.2);
+}
+
+.flip-back {
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    border: 2px solid rgba(76, 175, 80, 0.3);
+    transform: rotateY(180deg);
+}
+
+.flip-instruction {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 20px;
+}
+
+.answer-text {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text-primary);
+    text-align: center;
+    padding: 20px;
+    width: 90%;
+}
+
+.btn-next {
     font-family: 'Inter', sans-serif;
     font-size: 17px;
-    font-weight: 400;
-    padding: 18px 25px;
-    background: white;
-    border: 2px solid var(--border-color);
-    border-radius: 16px;
+    font-weight: 500;
+    padding: 16px 40px;
+    border: none;
+    border-radius: 50px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    text-align: left;
-    color: var(--text-primary);
-    position: relative;
-    overflow: hidden;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    background: var(--rose-pink);
+    color: white;
+    box-shadow: 0 4px 15px rgba(255, 182, 193, 0.4);
+    margin-top: 30px;
+    align-self: center;
 }
 
-.option-button:hover {
-    border-color: var(--rose-pink);
-    background: var(--blush-pink);
-    transform: translateX(5px);
+.btn-next:hover:not(.hidden) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 182, 193, 0.5);
 }
 
-.option-button:active {
-    transform: translateX(3px);
+.btn-next:active:not(.hidden) {
+    transform: translateY(0);
 }
 
-.option-button.selected {
-    border-color: #9E9E9E;
-    background: #F5F5F5;
-    border-width: 3px;
-}
-
-.option-button.correct {
-    border-color: #4CAF50;
-    border-width: 3px;
-    background: #E8F5E9;
-    animation: correctAnswerPulse 0.6s ease;
-    box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.2);
-}
-
-@keyframes correctAnswerPulse {
-    0% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4);
-    }
-    50% {
-        transform: scale(1.02);
-        box-shadow: 0 0 0 8px rgba(76, 175, 80, 0);
-    }
-    100% {
-        transform: scale(1);
-        box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.2);
-    }
+.btn-next.hidden {
+    display: none;
 }
 
 .feedback-message {
@@ -371,7 +413,7 @@ body {
 
 @keyframes questionFadeIn {
     from {
-        opacity: 0;
+    opacity: 0;
         transform: translateY(15px);
     }
     to {
@@ -592,9 +634,18 @@ body {
         margin-bottom: 30px;
     }
 
-    .option-button {
+    .flip-container {
+        height: 100px;
+        max-width: 90%;
+    }
+    
+    .answer-text {
         font-size: 16px;
-        padding: 16px 20px;
+        padding: 15px;
+    }
+    
+    .flip-instruction {
+        font-size: 16px;
     }
 
     .message-text {
