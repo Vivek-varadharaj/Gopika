@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A Small Ritual</title>
+    <title>The Learner</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -21,8 +21,25 @@
     <!-- Auth Screen -->
     <div class="screen auth-screen" id="authScreen">
         <div class="content-wrapper">
-            <div class="auth-illustration">📚</div>
-            <h1 class="app-name">Shuttumani Padikk</h1>
+            <div class="auth-illustration">
+                <svg class="app-logo" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Book base -->
+                    <rect x="20" y="30" width="80" height="60" rx="4" fill="#4A90E2" opacity="0.9"/>
+                    <rect x="25" y="35" width="70" height="50" rx="2" fill="#FFFFFF"/>
+                    <!-- Book pages -->
+                    <line x1="35" y1="45" x2="85" y2="45" stroke="#4A90E2" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="35" y1="55" x2="85" y2="55" stroke="#4A90E2" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="35" y1="65" x2="70" y2="65" stroke="#4A90E2" stroke-width="2" stroke-linecap="round"/>
+                    <!-- Graduation cap -->
+                    <path d="M 30 30 Q 60 20 90 30" stroke="#FFD700" stroke-width="4" fill="none" stroke-linecap="round"/>
+                    <path d="M 30 30 L 25 28 L 30 30 L 35 28 Z" fill="#FFD700"/>
+                    <path d="M 90 30 L 95 28 L 90 30 L 85 28 Z" fill="#FFD700"/>
+                    <!-- Lightbulb (idea/learning) -->
+                    <circle cx="75" cy="25" r="8" fill="#FFD700" opacity="0.9"/>
+                    <path d="M 75 17 L 75 15 M 70 20 L 68 18 M 80 20 L 82 18" stroke="#FFA500" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <h1 class="app-name">The Learner</h1>
             <h2 class="auth-title">Start Your Learning Journey</h2>
             <p class="auth-subtitle">Practice daily questions and challenge yourself with interactive quizzes</p>
             

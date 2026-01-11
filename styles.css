@@ -538,6 +538,16 @@ body {
     font-size: 80px;
     margin-bottom: 20px;
     animation: float 3s ease-in-out infinite;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.app-logo {
+    width: 120px;
+    height: 120px;
+    filter: drop-shadow(0 4px 8px rgba(74, 144, 226, 0.3));
+    animation: float 3s ease-in-out infinite;
 }
 
 .app-name {
@@ -771,6 +781,11 @@ body {
     .auth-illustration {
         font-size: 60px;
         margin-bottom: 15px;
+    }
+    
+    .app-logo {
+        width: 90px;
+        height: 90px;
     }
     
     .app-name {
