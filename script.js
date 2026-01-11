@@ -1129,11 +1129,5 @@ if (shareScreenshotButton) {
     console.warn('shareScreenshotButton not found');
 }
 
-// Initialize event listeners after DOM is ready
-function initializeEventListeners() {
-    // Re-attach listeners for dynamically created elements if needed
-    // This is called after DOM content is loaded
-}
-
 // Initial setup - wait for auth state
 // Auth state listener handles initial navigation

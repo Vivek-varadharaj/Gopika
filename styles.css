@@ -461,82 +461,12 @@ body {
     color: var(--text-primary);
 }
 
-/* Auth Tabs */
-.auth-tabs {
-    display: flex;
-    background: #f8f8f8;
-    margin: 0;
-    padding: 8px;
-    border-radius: 12px;
-    margin: 0 40px 32px 40px;
-    gap: 8px;
-}
-
-.auth-tab {
-    flex: 1;
-    padding: 14px 24px;
-    background: transparent;
-    border: none;
-    font-family: 'Inter', sans-serif;
-    font-size: 15px;
-    font-weight: 500;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border-radius: 8px;
-    position: relative;
-}
-
-.auth-tab:hover {
-    color: var(--text-primary);
-    background-color: rgba(255, 255, 255, 0.6);
-}
-
-.auth-tab.active {
-    color: #ffffff;
-    background: var(--primary-color);
-    font-weight: 600;
-    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
-}
-
-.auth-tab-content {
-    display: none;
-    padding: 0 40px 40px 40px;
-    animation: fadeIn 0.3s ease-in;
-}
-
-.auth-tab-content.active {
-    display: block;
-}
-
 /* Auth Container */
 .auth-container {
     display: flex;
     flex-direction: column;
     gap: 20px;
     width: 100%;
-}
-
-.auth-input {
-    padding: 16px 20px;
-    border: 2px solid #e8e8e8;
-    border-radius: 12px;
-    font-size: 16px;
-    font-family: 'Inter', sans-serif;
-    background-color: #ffffff;
-    transition: all 0.2s ease;
-    color: var(--text-primary);
-}
-
-.auth-input::placeholder {
-    color: #b0b0b0;
-}
-
-.auth-input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    background-color: #ffffff;
-    box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.1);
 }
 
 .error-message {
@@ -553,29 +483,6 @@ body {
 
 .error-message.hidden {
     display: none;
-}
-
-.auth-divider {
-    display: flex;
-    align-items: center;
-    text-align: center;
-    margin: 8px 0;
-    position: relative;
-}
-
-.auth-divider::before,
-.auth-divider::after {
-    content: '';
-    flex: 1;
-    border-bottom: 1px solid #e8e8e8;
-}
-
-.auth-divider span {
-    padding: 0 16px;
-    color: #999;
-    font-size: 13px;
-    font-weight: 500;
-    background: transparent;
 }
 
 .btn-google {
