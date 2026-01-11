@@ -8,12 +8,28 @@ let currentUser = null;
 
 function initializeFirebase() {
     if (typeof firebase === 'undefined') {
-        console.log('Firebase SDK not loaded');
+        console.error('Firebase SDK not loaded');
         return;
     }
     
-    if (FIREBASE_CONFIG.apiKey === 'YOUR_API_KEY') {
-        console.log('Firebase not configured. Logging will be skipped.');
+    // Check if FIREBASE_CONFIG is defined
+    if (typeof FIREBASE_CONFIG === 'undefined') {
+        console.error('firebase-config.js is missing! Make sure it is deployed to GitHub Pages.');
+        console.error('See GITHUB_PAGES_DEPLOYMENT.md for instructions.');
+        // Show error to user
+        const message = document.getElementById('message');
+        if (message) {
+            message.innerHTML = `
+                <h1>Configuration Error</h1>
+                <p>Firebase configuration file is missing.</p>
+                <p>Please check GITHUB_PAGES_DEPLOYMENT.md for setup instructions.</p>
+            `;
+        }
+        return;
+    }
+    
+    if (FIREBASE_CONFIG.apiKey === 'YOUR_API_KEY' || !FIREBASE_CONFIG.apiKey) {
+        console.error('Firebase not configured. Please update firebase-config.js with your Firebase credentials.');
         return;
     }
     

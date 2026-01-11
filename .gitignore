@@ -1,5 +1,7 @@
 # Firebase Configuration (contains sensitive credentials)
-firebase-config.js
+# Note: firebase-config.js is included in repo for GitHub Pages deployment
+# Firebase API keys are safe to expose - security is handled by Firebase Security Rules
+# firebase-config.js
 
 # Environment files
 .env
