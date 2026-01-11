@@ -21,7 +21,10 @@
     <!-- Auth Screen -->
     <div class="screen auth-screen" id="authScreen">
         <div class="content-wrapper">
-            <p class="intro-text">A small ritual for today.</p>
+            <div class="auth-illustration">📚</div>
+            <h1 class="app-name">Shuttumani Padikk</h1>
+            <h2 class="auth-title">Start Your Learning Journey</h2>
+            <p class="auth-subtitle">Practice daily questions and challenge yourself with interactive quizzes</p>
             
             <div class="auth-container">
                 <button class="btn-google" id="googleSignInButton">
@@ -41,9 +44,9 @@
     <!-- Landing Screen -->
     <div class="screen landing-screen hidden" id="landingScreen">
         <div class="content-wrapper">
-            <p class="intro-text">Welcome back.</p>
-            <button class="btn-primary" id="startQuestionsButton">Daily Questions</button>
-            <button class="btn-primary" id="viewChallengesButton" style="margin-top: 15px;">Challenges</button>
+            <p class="intro-text">Continue Learning</p>
+            <button class="btn-primary" id="startQuestionsButton">Practice Questions</button>
+            <button class="btn-primary" id="viewChallengesButton" style="margin-top: 15px;">Learning Challenges</button>
             <button class="btn-secondary" id="logoutButton" style="margin-top: 20px;">Sign Out</button>
         </div>
     </div>
@@ -51,7 +54,7 @@
     <!-- Challenges Selection Screen -->
     <div class="screen challenges-screen hidden" id="challengesScreen">
         <div class="content-wrapper">
-            <p class="intro-text">Choose a Challenge</p>
+            <p class="intro-text">Select a Learning Challenge</p>
             <div id="challengesList" class="challenges-list">
                 <!-- Challenges will be dynamically inserted here -->
             </div>
@@ -63,14 +66,14 @@
     <div class="screen loading-screen hidden" id="loadingScreen">
         <div class="content-wrapper">
             <div class="spinner"></div>
-            <p class="loading-text">Loading challenges...</p>
+            <p class="loading-text">Loading your learning content...</p>
         </div>
     </div>
 
     <!-- No Content Screen -->
     <div class="screen no-content-screen hidden" id="noContentScreen">
         <div class="content-wrapper">
-            <p class="message-text" id="noContentMessage">No content available at the moment.</p>
+            <p class="message-text" id="noContentMessage">No learning content available at the moment.</p>
             <button class="btn-secondary" id="backToLandingButton1">Back to Home</button>
         </div>
     </div>
@@ -79,7 +82,7 @@
     <div class="screen content-screen hidden" id="contentScreen">
         <div class="content-wrapper">
             <div class="progress-indicator">
-                <span id="progressText">Question 1 of 3</span>
+                <span id="progressText">Practice Question 1 of 3</span>
             </div>
             
             <div class="question-container">

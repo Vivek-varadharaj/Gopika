@@ -546,7 +546,7 @@ function renderChallenges(challenges) {
     challengesList.innerHTML = '';
     
     if (challenges.length === 0) {
-        challengesList.innerHTML = '<p class="message-text">No challenges available.</p>';
+        challengesList.innerHTML = '<p class="message-text">No learning challenges available at the moment.</p>';
         return;
     }
     
@@ -810,10 +810,10 @@ function showDailyQuestionsCompletion() {
         completionIcon.textContent = '✨';
     }
     if (completionTitle) {
-        completionTitle.textContent = 'You completed every question!';
+        completionTitle.textContent = 'Practice Complete!';
     }
     if (completionMessage) {
-        completionMessage.textContent = 'Congrats! Share this milestone.';
+        completionMessage.textContent = 'Well done! You completed all practice questions. Keep up the great learning!';
     }
     
     // Show share button for daily questions
@@ -850,10 +850,10 @@ function showChallengeCompletion() {
         completionIcon.textContent = '🎉';
     }
     if (completionTitle) {
-        completionTitle.textContent = 'Challenge Complete!';
+        completionTitle.textContent = 'Learning Challenge Complete!';
     }
     if (completionMessage) {
-        completionMessage.textContent = `You scored ${quizScore} out of ${currentChallengeQuestions.length} (${percentage}%). Great work! Share this achievement.`;
+        completionMessage.textContent = `You scored ${quizScore} out of ${currentChallengeQuestions.length} (${percentage}%). Excellent work! Keep learning and growing.`;
     }
     
     // Show share button for challenges
@@ -944,7 +944,7 @@ if (startQuestionsButton) {
             const availableQuestions = await getAvailableQuestions(allQuestions);
             
             if (availableQuestions.length === 0) {
-                showNoContent('No questions available for now.');
+                showNoContent('No practice questions available for now.');
                 return;
             }
             
@@ -982,7 +982,7 @@ if (viewChallengesButton) {
             const availableChallenges = await getAvailableChallenges(allChallenges);
             
             if (availableChallenges.length === 0) {
-                showNoContent('No challenges available for now.');
+                showNoContent('No learning challenges available for now.');
                 return;
             }
             
@@ -1014,7 +1014,7 @@ if (viewMoreChallengesButton) {
             const availableChallenges = await getAvailableChallenges(allChallenges);
             
             if (availableChallenges.length === 0) {
-                showNoContent('No challenges available for now.');
+                showNoContent('No learning challenges available for now.');
                 return;
             }
             
