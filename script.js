@@ -144,18 +144,19 @@ function setLanguage(lang) {
 function updateLanguageToggles() {
     const toggles = document.querySelectorAll('.language-toggle');
     toggles.forEach(toggle => {
-        // Always show the current language on the button
+        // Show the language you can switch TO (opposite of current)
+        const targetLang = currentLanguage === 'en' ? 'ml' : 'en';
         const langCode = toggle.querySelector('.lang-code');
         const langName = toggle.querySelector('.lang-name');
         
         if (langCode) {
-            langCode.textContent = currentLanguage.toUpperCase();
+            langCode.textContent = targetLang.toUpperCase();
         }
         if (langName) {
-            langName.textContent = currentLanguage === 'en' ? 'English' : 'മലയാളം';
+            langName.textContent = targetLang === 'en' ? 'English' : 'മലയാളം';
         }
         
-        // The button is always "active" since it shows the current language
+        // The button is always "active" to indicate it's clickable
         toggle.classList.add('active');
     });
 }
@@ -226,11 +227,13 @@ function hideAllScreens() {
 function showChallenges() {
     hideAllScreens();
     challengesScreen.classList.remove('hidden');
+    updateLanguageToggles();
 }
 
 function showQuiz() {
     hideAllScreens();
     quizScreen.classList.remove('hidden');
+    updateLanguageToggles();
 }
 
 function showAuth() {
@@ -249,6 +252,7 @@ function showLanding() {
     }
     hideAllScreens();
     landingScreen.classList.remove('hidden');
+    updateLanguageToggles();
 }
 
 function showLoading() {
@@ -267,6 +271,7 @@ function showNoContent(message = 'No content available at the moment.') {
 function showContent() {
     hideAllScreens();
     contentScreen.classList.remove('hidden');
+    updateLanguageToggles();
 }
 
 function showCompletion() {
@@ -594,8 +599,43 @@ function renderQuestion() {
     // Update question text
     questionText.textContent = getText(question.question);
     
+    // Regenerate answer text from original question data to ensure correct language
+    let answerTextContent = '';
+    if (question.originalQuestion) {
+        const originalQ = question.originalQuestion;
+        const options = originalQ.options;
+        
+        // Get the correct answer option in current language
+        let correctAnswerText = '';
+        if (Array.isArray(options)) {
+            // Old format: array of strings
+            correctAnswerText = options[originalQ.correctAnswer] || '';
+        } else if (options && typeof options === 'object') {
+            // New multilingual format: {en: [...], ml: [...]}
+            if (options[currentLanguage] && Array.isArray(options[currentLanguage])) {
+                correctAnswerText = options[currentLanguage][originalQ.correctAnswer] || '';
+            } else if (options['en'] && Array.isArray(options['en'])) {
+                correctAnswerText = options['en'][originalQ.correctAnswer] || '';
+            } else if (options['ml'] && Array.isArray(options['ml'])) {
+                correctAnswerText = options['ml'][originalQ.correctAnswer] || '';
+            }
+        }
+        
+        // Get explanation in current language
+        const explanation = getText(originalQ.explanation, '');
+        
+        // Combine answer and explanation
+        answerTextContent = correctAnswerText;
+        if (explanation) {
+            answerTextContent = answerTextContent ? `${answerTextContent}. ${explanation}` : explanation;
+        }
+    } else {
+        // Fallback to stored answer if original question not available
+        answerTextContent = getText(question.answer);
+    }
+    
     // Update answer text
-    answerText.textContent = getText(question.answer);
+    answerText.textContent = answerTextContent || 'No answer available';
     
     // Reset answer overlay
     answerContainer.classList.remove('revealed');
@@ -1283,20 +1323,28 @@ if (backToLandingButton2) {
     console.error('backToLandingButton2 not found');
 }
 
-// Language toggle event listeners
+// Language toggle event listeners - single controller for all toggles
+let languageToggleHandlerAttached = false;
+
 function setupLanguageToggles() {
-    const toggles = document.querySelectorAll('.language-toggle');
-    toggles.forEach(toggle => {
-        // Remove any existing listeners by cloning
-        const newToggle = toggle.cloneNode(true);
-        toggle.parentNode.replaceChild(newToggle, toggle);
-        
-        newToggle.addEventListener('click', () => {
-            // Toggle to the other language
-            const newLang = currentLanguage === 'en' ? 'ml' : 'en';
-            setLanguage(newLang);
+    // Use event delegation to handle all language toggle clicks
+    // This ensures all toggles work as a single synchronized controller
+    if (!languageToggleHandlerAttached) {
+        document.addEventListener('click', (e) => {
+            const toggle = e.target.closest('.language-toggle');
+            if (toggle) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Toggle to the other language
+                const newLang = currentLanguage === 'en' ? 'ml' : 'en';
+                setLanguage(newLang);
+            }
         });
-    });
+        languageToggleHandlerAttached = true;
+    }
+    
+    // Always update all toggles to reflect current language
     updateLanguageToggles();
 }
 
@@ -1306,6 +1354,7 @@ if (document.readyState === 'loading') {
         setupLanguageToggles();
     });
 } else {
+    // DOM already loaded, set up immediately
     setupLanguageToggles();
 }
 
