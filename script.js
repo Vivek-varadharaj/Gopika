@@ -907,69 +907,77 @@ if (googleSignInButton) {
 }
 
 // Start daily questions
-startQuestionsButton.addEventListener('click', async () => {
-    if (!currentUser) {
-        showAuth();
-        return;
-    }
-    
-    showLoading();
-    
-    try {
-        // Fetch all questions
-        const allQuestions = await fetchQuestionsFromFirebase();
+if (startQuestionsButton) {
+    startQuestionsButton.addEventListener('click', async () => {
+        if (!currentUser) {
+            showAuth();
+            return;
+        }
         
-        // Filter out completed questions for this user
-        const availableQuestions = await getAvailableQuestions(allQuestions);
+        showLoading();
         
-        if (availableQuestions.length === 0) {
+        try {
+            // Fetch all questions
+            const allQuestions = await fetchQuestionsFromFirebase();
+            
+            // Filter out completed questions for this user
+            const availableQuestions = await getAvailableQuestions(allQuestions);
+            
+            if (availableQuestions.length === 0) {
+                showNoContent('No questions available for now.');
+                return;
+            }
+            
+            // Use all available questions
+            selectedQuestions = availableQuestions;
+            currentQuestionIndex = 0;
+            
+            // Render first question
+            showContent();
+            renderQuestion();
+            
+        } catch (error) {
+            console.error('Error loading questions:', error);
             showNoContent('No questions available for now.');
-            return;
         }
-        
-        // Use all available questions
-        selectedQuestions = availableQuestions;
-        currentQuestionIndex = 0;
-        
-        // Render first question
-        showContent();
-        renderQuestion();
-        
-    } catch (error) {
-        console.error('Error loading questions:', error);
-        showNoContent('No questions available for now.');
-    }
-});
+    });
+} else {
+    console.warn('startQuestionsButton not found');
+}
 
-viewChallengesButton.addEventListener('click', async () => {
-    if (!currentUser) {
-        showAuth();
-        return;
-    }
-    
-    showLoading();
-    
-    try {
-        // Fetch all challenges
-        const allChallenges = await fetchChallengesFromFirebase();
-        
-        // Filter out completed challenges for this user
-        const availableChallenges = await getAvailableChallenges(allChallenges);
-        
-        if (availableChallenges.length === 0) {
-            showNoContent('No challenges available for now.');
+if (viewChallengesButton) {
+    viewChallengesButton.addEventListener('click', async () => {
+        if (!currentUser) {
+            showAuth();
             return;
         }
         
-        // Render challenges list
-        showChallenges();
-        renderChallenges(availableChallenges);
+        showLoading();
         
-    } catch (error) {
-        console.error('Error loading challenges:', error);
-        showNoContent('No challenges available for now.');
-    }
-});
+        try {
+            // Fetch all challenges
+            const allChallenges = await fetchChallengesFromFirebase();
+            
+            // Filter out completed challenges for this user
+            const availableChallenges = await getAvailableChallenges(allChallenges);
+            
+            if (availableChallenges.length === 0) {
+                showNoContent('No challenges available for now.');
+                return;
+            }
+            
+            // Render challenges list
+            showChallenges();
+            renderChallenges(availableChallenges);
+            
+        } catch (error) {
+            console.error('Error loading challenges:', error);
+            showNoContent('No challenges available for now.');
+        }
+    });
+} else {
+    console.warn('viewChallengesButton not found');
+}
 
 if (backToLandingFromChallenges) {
     backToLandingFromChallenges.addEventListener('click', showLanding);
@@ -1119,6 +1127,12 @@ if (shareScreenshotButton) {
     shareScreenshotButton.addEventListener('click', captureAndShareScreenshot);
 } else {
     console.warn('shareScreenshotButton not found');
+}
+
+// Initialize event listeners after DOM is ready
+function initializeEventListeners() {
+    // Re-attach listeners for dynamically created elements if needed
+    // This is called after DOM content is loaded
 }
 
 // Initial setup - wait for auth state
