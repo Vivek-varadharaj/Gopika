@@ -70,6 +70,7 @@
             <p class="intro-text">Continue Learning</p>
             <button class="btn-primary" id="startQuestionsButton">Practice Questions</button>
             <button class="btn-primary" id="viewChallengesButton" style="margin-top: 15px;">Learning Challenges</button>
+            <button class="btn-primary" id="viewFactClustersButton" style="margin-top: 15px;">Same answer, Different questions</button>
             <button class="btn-secondary" id="logoutButton" style="margin-top: 20px;">Sign Out</button>
         </div>
     </div>
@@ -88,6 +89,40 @@
                 <!-- Challenges will be dynamically inserted here -->
             </div>
             <button class="btn-secondary" id="backToLandingFromChallenges" style="margin-top: 20px;">Back</button>
+        </div>
+    </div>
+
+    <!-- Fact Clusters Selection Screen -->
+    <div class="screen fact-clusters-screen hidden" id="factClustersScreen">
+        <div class="language-toggle-container">
+            <button class="language-toggle" id="languageToggleFactClusters" data-lang="en">
+                <span class="lang-code">EN</span>
+                <span class="lang-name">English</span>
+            </button>
+        </div>
+        <div class="content-wrapper">
+            <p class="intro-text">Same answer, Different questions</p>
+            <p class="intro-subtitle" style="margin-top: 10px; margin-bottom: 20px; font-size: 14px; color: var(--text-secondary);">Multiple questions sharing the same answer</p>
+            <div id="factClustersList" class="challenges-list">
+                <!-- Fact clusters will be dynamically inserted here -->
+            </div>
+            <button class="btn-secondary" id="backToLandingFromFactClusters" style="margin-top: 20px;">Back</button>
+        </div>
+    </div>
+
+    <!-- Fact Cluster Detail Screen -->
+    <div class="screen fact-cluster-detail-screen hidden" id="factClusterDetailScreen">
+        <div class="language-toggle-container">
+            <button class="language-toggle" id="languageToggleFactClusterDetail" data-lang="en">
+                <span class="lang-code">EN</span>
+                <span class="lang-name">English</span>
+            </button>
+        </div>
+        <div class="content-wrapper">
+            <div id="factClusterDetailContent">
+                <!-- Fact cluster details will be dynamically inserted here -->
+            </div>
+            <button class="btn-secondary" id="backToFactClusters" style="margin-top: 20px;">Back</button>
         </div>
     </div>
 

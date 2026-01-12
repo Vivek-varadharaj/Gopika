@@ -137,6 +137,14 @@ function setLanguage(lang) {
         if (viewChallengesButton) {
             viewChallengesButton.click();
         }
+    } else if (factClustersList && factClustersList.children.length > 0) {
+        // Re-fetch and render fact clusters to update titles/descriptions
+        if (viewFactClustersButton) {
+            viewFactClustersButton.click();
+        }
+    } else if (factClusterDetailContent && factClusterDetailContent.innerHTML && currentFactCluster) {
+        // Re-render fact cluster detail if on detail screen
+        renderFactClusterDetail(currentFactCluster);
     }
 }
 
@@ -174,10 +182,15 @@ let currentQuizQuestionIndex = 0;
 let selectedQuizAnswer = null;
 let quizScore = 0;
 
+// For fact clusters
+let currentFactCluster = null;
+
 // DOM elements
 const authScreen = document.getElementById('authScreen');
 const landingScreen = document.getElementById('landingScreen');
 const challengesScreen = document.getElementById('challengesScreen');
+const factClustersScreen = document.getElementById('factClustersScreen');
+const factClusterDetailScreen = document.getElementById('factClusterDetailScreen');
 const quizScreen = document.getElementById('quizScreen');
 const loadingScreen = document.getElementById('loadingScreen');
 const noContentScreen = document.getElementById('noContentScreen');
@@ -188,8 +201,13 @@ const googleSignInButton = document.getElementById('googleSignInButton');
 const logoutButton = document.getElementById('logoutButton');
 const startQuestionsButton = document.getElementById('startQuestionsButton');
 const viewChallengesButton = document.getElementById('viewChallengesButton');
+const viewFactClustersButton = document.getElementById('viewFactClustersButton');
 const backToLandingFromChallenges = document.getElementById('backToLandingFromChallenges');
+const backToLandingFromFactClusters = document.getElementById('backToLandingFromFactClusters');
+const backToFactClusters = document.getElementById('backToFactClusters');
 const challengesList = document.getElementById('challengesList');
+const factClustersList = document.getElementById('factClustersList');
+const factClusterDetailContent = document.getElementById('factClusterDetailContent');
 const viewMoreChallengesButton = document.getElementById('viewMoreChallengesButton');
 const backToLandingButton1 = document.getElementById('backToLandingButton1');
 const backToLandingButton2 = document.getElementById('backToLandingButton2');
@@ -218,6 +236,8 @@ function hideAllScreens() {
     authScreen.classList.add('hidden');
     landingScreen.classList.add('hidden');
     challengesScreen.classList.add('hidden');
+    if (factClustersScreen) factClustersScreen.classList.add('hidden');
+    if (factClusterDetailScreen) factClusterDetailScreen.classList.add('hidden');
     loadingScreen.classList.add('hidden');
     noContentScreen.classList.add('hidden');
     contentScreen.classList.add('hidden');
@@ -619,36 +639,49 @@ function renderQuestion() {
     let answerTextContent = '';
     if (question.originalQuestion) {
         const originalQ = question.originalQuestion;
-        const options = originalQ.options;
         
-        // Get the correct answer option in current language
-        let correctAnswerText = '';
-        if (Array.isArray(options)) {
-            // Old format: array of strings
-            correctAnswerText = options[originalQ.correctAnswer] || '';
-        } else if (options && typeof options === 'object') {
-            // New multilingual format: {en: [...], ml: [...]}
-            if (options[currentLanguage] && Array.isArray(options[currentLanguage])) {
-                correctAnswerText = options[currentLanguage][originalQ.correctAnswer] || '';
-            } else if (options['en'] && Array.isArray(options['en'])) {
-                correctAnswerText = options['en'][originalQ.correctAnswer] || '';
-            } else if (options['ml'] && Array.isArray(options['ml'])) {
-                correctAnswerText = options['ml'][originalQ.correctAnswer] || '';
+        // Check if this is a fact cluster (different_facts_same_answer type)
+        if (originalQ.type === 'fact_cluster' && originalQ.answer) {
+            // For fact clusters, answer is directly in originalQ.answer
+            answerTextContent = getText(originalQ.answer, '');
+        } else if (originalQ.options) {
+            // For challenge questions, answer is from options array
+            const options = originalQ.options;
+            
+            // Get the correct answer option in current language
+            let correctAnswerText = '';
+            if (Array.isArray(options)) {
+                // Old format: array of strings
+                correctAnswerText = options[originalQ.correctAnswer] || '';
+            } else if (options && typeof options === 'object') {
+                // New multilingual format: {en: [...], ml: [...]}
+                if (options[currentLanguage] && Array.isArray(options[currentLanguage])) {
+                    correctAnswerText = options[currentLanguage][originalQ.correctAnswer] || '';
+                } else if (options['en'] && Array.isArray(options['en'])) {
+                    correctAnswerText = options['en'][originalQ.correctAnswer] || '';
+                } else if (options['ml'] && Array.isArray(options['ml'])) {
+                    correctAnswerText = options['ml'][originalQ.correctAnswer] || '';
+                }
             }
+            
+            answerTextContent = correctAnswerText;
         }
         
-        // Get explanation in current language
-        const explanation = getText(originalQ.explanation, '');
-        
-        // Set answer text (without explanation)
-        answerTextContent = correctAnswerText;
-        
-        // Store explanation separately (will be shown outside the box when revealed)
-        if (answerExplanation) {
-            if (explanation) {
-                answerExplanation.textContent = explanation;
-                // Keep it hidden until answer is revealed
-            } else {
+        // Get explanation in current language (only for challenge questions)
+        if (originalQ.explanation) {
+            const explanation = getText(originalQ.explanation, '');
+            // Store explanation separately (will be shown outside the box when revealed)
+            if (answerExplanation) {
+                if (explanation) {
+                    answerExplanation.textContent = explanation;
+                    // Keep it hidden until answer is revealed
+                } else {
+                    answerExplanation.textContent = '';
+                }
+            }
+        } else {
+            // No explanation for fact clusters
+            if (answerExplanation) {
                 answerExplanation.textContent = '';
             }
         }
@@ -773,6 +806,152 @@ function shuffleArray(array) {
     return shuffled;
 }
 
+// Firebase - Fetch fact clusters
+async function fetchFactClustersFromFirebase() {
+    if (!db) {
+        throw new Error('Firebase not initialized. Please configure Firebase.');
+    }
+    
+    try {
+        const clustersSnapshot = await db.collection('factClusters').get();
+        const clusters = [];
+        
+        clustersSnapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.type === 'different_facts_same_answer') {
+                clusters.push({
+                    id: doc.id,
+                    clusterId: data.clusterId || doc.id,
+                    type: data.type,
+                    difficulty: data.difficulty || 'beginner',
+                    answer: data.answer || {},
+                    facts: data.facts || []
+                });
+            }
+        });
+        
+        return clusters;
+    } catch (error) {
+        console.error('Error fetching fact clusters:', error);
+        throw error;
+    }
+}
+
+// Show fact clusters screen
+function showFactClusters() {
+    if (!currentUser) {
+        showAuth();
+        return;
+    }
+    
+    hideAllScreens();
+    if (factClustersScreen) {
+        factClustersScreen.classList.remove('hidden');
+        updateLanguageToggles();
+        loadFactClusters();
+    }
+}
+
+// Load and display fact clusters
+async function loadFactClusters() {
+    if (!factClustersList) return;
+    
+    showLoading();
+    try {
+        const clusters = await fetchFactClustersFromFirebase();
+        renderFactClusters(clusters);
+        hideAllScreens();
+        if (factClustersScreen) {
+            factClustersScreen.classList.remove('hidden');
+        }
+    } catch (error) {
+        console.error('Error loading fact clusters:', error);
+        showNoContent('Failed to load clusters. Please try again later.');
+    }
+}
+
+// Render fact clusters list
+function renderFactClusters(clusters) {
+    if (!factClustersList) return;
+    
+    factClustersList.innerHTML = '';
+    
+    if (clusters.length === 0) {
+        factClustersList.innerHTML = '<p class="message-text">No clusters available at the moment.</p>';
+        return;
+    }
+    
+    clusters.forEach(cluster => {
+        const clusterCard = document.createElement('div');
+        clusterCard.className = 'challenge-card';
+        const answerText = getText(cluster.answer, 'Unknown');
+        clusterCard.innerHTML = `
+            <h3 class="challenge-title">${answerText}</h3>
+            <p class="challenge-description" style="font-size: 14px; color: var(--text-secondary);">All facts share the same answer</p>
+            <div class="challenge-meta">
+                <span class="challenge-questions">${cluster.facts.length} ${currentLanguage === 'ml' ? 'ചോദ്യങ്ങൾ' : 'questions'}</span>
+                ${cluster.difficulty ? `<span class="challenge-difficulty ${cluster.difficulty}">${cluster.difficulty}</span>` : ''}
+            </div>
+            <button class="btn-primary start-challenge-btn" data-cluster-id="${cluster.clusterId}">${currentLanguage === 'ml' ? 'കാണുക' : 'View Cluster'}</button>
+        `;
+        
+        const viewBtn = clusterCard.querySelector('.start-challenge-btn');
+        viewBtn.addEventListener('click', () => showFactClusterDetail(cluster));
+        
+        factClustersList.appendChild(clusterCard);
+    });
+}
+
+// Show fact cluster detail screen
+function showFactClusterDetail(cluster) {
+    hideAllScreens();
+    if (factClusterDetailScreen) {
+        currentFactCluster = cluster; // Store for language changes
+        factClusterDetailScreen.classList.remove('hidden');
+        updateLanguageToggles();
+        renderFactClusterDetail(cluster);
+    }
+}
+
+// Render fact cluster detail (all facts together)
+function renderFactClusterDetail(cluster) {
+    if (!factClusterDetailContent) return;
+    
+    const answerText = getText(cluster.answer, 'Unknown');
+    
+    let html = `
+        <div class="fact-cluster-header" style="margin-bottom: 30px;">
+            <h2 class="intro-text" style="margin-bottom: 10px;">${answerText}</h2>
+            <p class="intro-subtitle" style="font-size: 16px; color: var(--text-secondary);">${cluster.facts.length} ${currentLanguage === 'ml' ? 'ചോദ്യങ്ങൾ ഒരേ ഉത്തരം പങ്കിടുന്നു' : 'questions sharing the same answer'}</p>
+        </div>
+        <div class="fact-cluster-facts" style="margin-bottom: 30px;">
+    `;
+    
+    cluster.facts.forEach((fact, index) => {
+        const questionText = getText(fact.question, '');
+        html += `
+            <div class="fact-item" style="background: white; padding: 20px; margin-bottom: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <div style="display: flex; align-items: start;">
+                    <div style="background: var(--primary-color); color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 15px; flex-shrink: 0;">${index + 1}</div>
+                    <div style="flex: 1;">
+                        <p class="question-text" style="font-size: 17px; line-height: 1.6; margin: 0;">${questionText}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += `
+        </div>
+        <div class="fact-cluster-answer" style="background: linear-gradient(135deg, rgba(74, 144, 226, 0.1) 0%, rgba(74, 144, 226, 0.05) 100%); padding: 25px; border-radius: 12px; border-left: 4px solid var(--primary-color); margin-top: 30px;">
+            <h3 style="margin: 0 0 10px 0; font-size: 18px; color: var(--text-primary);">${currentLanguage === 'ml' ? 'ഉത്തരം' : 'Answer'}:</h3>
+            <p style="margin: 0; font-size: 24px; font-weight: 600; color: var(--primary-color);">${answerText}</p>
+        </div>
+    `;
+    
+    factClusterDetailContent.innerHTML = html;
+}
+
 // Firebase - Fetch questions from challenges (for daily questions)
 async function fetchQuestionsFromFirebase() {
     if (!db) {
@@ -780,12 +959,13 @@ async function fetchQuestionsFromFirebase() {
     }
     
     try {
-        // Fetch all challenges
+        // Fetch only challenges (fact clusters are handled separately)
         const challenges = await fetchChallengesFromFirebase();
         
         // Extract all questions from all challenges
         const allQuestions = [];
         
+        // Process challenge questions only
         challenges.forEach(challenge => {
             if (challenge.questions && Array.isArray(challenge.questions)) {
                 challenge.questions.forEach(question => {
@@ -1292,6 +1472,34 @@ if (backToLandingFromChallenges) {
     backToLandingFromChallenges.addEventListener('click', showLanding);
 } else {
     console.warn('backToLandingFromChallenges not found');
+}
+
+// Fact Clusters navigation
+if (viewFactClustersButton) {
+    viewFactClustersButton.addEventListener('click', async () => {
+        if (!currentUser) {
+            showAuth();
+            return;
+        }
+        
+        showFactClusters();
+    });
+} else {
+    console.warn('viewFactClustersButton not found');
+}
+
+if (backToLandingFromFactClusters) {
+    backToLandingFromFactClusters.addEventListener('click', showLanding);
+} else {
+    console.warn('backToLandingFromFactClusters not found');
+}
+
+if (backToFactClusters) {
+    backToFactClusters.addEventListener('click', () => {
+        showFactClusters();
+    });
+} else {
+    console.warn('backToFactClusters not found');
 }
 
 if (viewMoreChallengesButton) {

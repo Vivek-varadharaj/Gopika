@@ -27,6 +27,16 @@ service cloud.firestore {
     }
 
     /* ===============================
+       FACT CLUSTERS (ADMIN ONLY WRITE)
+       =============================== */
+    match /factClusters/{clusterId} {
+      allow read: if request.auth != null;
+      allow create: if true; // Allow unauthenticated writes for import tool (temporary - change back after importing)
+      allow update: if true; // Allow updates for import tool (temporary - change back after importing)
+      allow delete: if false;
+    }
+
+    /* ===============================
        USER CHALLENGE PROGRESS
        =============================== */
     match /userChallenges/{userId} {
@@ -75,6 +85,14 @@ service cloud.firestore {
   - ⚠️ **After importing challenges, change this back to:** `allow create: if request.auth != null;`
 - **Update/Delete**: Admin only (disabled for client SDK)
 
+### Fact Clusters Collection
+- **Read**: Authenticated users only
+- **Create**: Currently allowed for import tool (`if true` - temporary)
+  - ⚠️ **After importing fact clusters, change this back to:** `allow create: if request.auth != null;`
+- **Update**: Currently allowed for import tool (`if true` - temporary)
+  - ⚠️ **After importing fact clusters, change this back to:** `allow update: if request.auth != null;`
+- **Delete**: Admin only (disabled for client SDK)
+
 ### User Challenges Collection
 - **Read/Write**: Users can only access their own progress document
 - **Delete**: Disabled
@@ -88,10 +106,15 @@ service cloud.firestore {
 
 ## Security Notes
 
-⚠️ **Important**: The `challenges` collection currently allows unauthenticated writes (`allow create: if true`) for the import tool. After importing your challenges, change this line to:
+⚠️ **Important**: The `challenges` and `factClusters` collections currently allow unauthenticated writes (`allow create: if true` and `allow update: if true`) for the import tool. After importing your data, change these lines to:
 
 ```javascript
+// For challenges collection:
 allow create: if request.auth != null;
+
+// For factClusters collection:
+allow create: if request.auth != null;
+allow update: if request.auth != null;
 ```
 
-This will prevent unauthorized users from creating challenges in production.
+This will prevent unauthorized users from creating or updating data in production.

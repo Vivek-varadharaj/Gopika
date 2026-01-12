@@ -137,12 +137,58 @@ service cloud.firestore {
 }
 ```
 
+### `factClusters` Collection
+
+Stores fact clusters where multiple questions share the same answer (different_facts_same_answer type):
+
+```json
+{
+  "clusterId": "cluster_kottayam_verified_025",
+  "type": "different_facts_same_answer",
+  "difficulty": "beginner",
+  "answer": {
+    "en": "Kottayam",
+    "ml": "കോട്ടയം"
+  },
+  "facts": [
+    {
+      "factId": "f001",
+      "question": {
+        "en": "Which district in India was the first to achieve 100% literacy?",
+        "ml": "ഇന്ത്യയിൽ ആദ്യമായി 100% സാക്ഷരത നേടിയ ജില്ല ഏത്?"
+      }
+    }
+  ],
+  "createdAt": "server_timestamp",
+  "updatedAt": "server_timestamp"
+}
+```
+
+**Field Descriptions:**
+- `clusterId` (string, required): Unique identifier for the cluster (used as document ID)
+- `type` (string, required): Must be "different_facts_same_answer"
+- `difficulty` (string, optional): "beginner", "intermediate", "advanced"
+- `answer` (object, required): Answer object with multilingual support
+  - `en` (string, required): Answer in English
+  - `ml` (string, optional): Answer in Malayalam
+- `facts` (array, required): Array of fact/question objects
+  - `factId` (string, required): Unique identifier for the fact
+  - `question` (object, required): Question text with multilingual support
+    - `en` (string, required): Question in English
+    - `ml` (string, optional): Question in Malayalam
+
 ## Query Patterns
 
 ### Fetch All Challenges
 ```javascript
 const challengesRef = firebase.firestore().collection('challenges');
 const snapshot = await challengesRef.get();
+```
+
+### Fetch All Fact Clusters
+```javascript
+const clustersRef = firebase.firestore().collection('factClusters');
+const snapshot = await clustersRef.get();
 ```
 
 ### Fetch Available Challenges (Not Completed)
