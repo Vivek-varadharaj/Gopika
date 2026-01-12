@@ -203,6 +203,7 @@ const questionText = document.getElementById('questionText');
 const answerText = document.getElementById('answerText');
 const answerContainer = document.getElementById('answerContainer');
 const answerOverlay = document.getElementById('answerOverlay');
+const answerExplanation = document.getElementById('answerExplanation');
 const nextButton = document.getElementById('nextButton');
 const quizProgressText = document.getElementById('quizProgressText');
 const quizQuestionText = document.getElementById('quizQuestionText');
@@ -599,6 +600,21 @@ function renderQuestion() {
     // Update question text
     questionText.textContent = getText(question.question);
     
+    // IMPORTANT: Reset overlay FIRST to prevent answer flash
+    // Clear answer text immediately and reset overlay state
+    answerText.textContent = '';
+    answerContainer.classList.remove('revealed');
+    isRevealed = false;
+    if (answerExplanation) {
+        answerExplanation.textContent = '';
+        answerExplanation.classList.add('hidden');
+    }
+    nextButton.classList.add('hidden');
+    
+    // Force a synchronous reflow to ensure overlay CSS is applied
+    // This ensures the overlay is visible before we set any answer content
+    void answerContainer.offsetHeight; // Force reflow
+    
     // Regenerate answer text from original question data to ensure correct language
     let answerTextContent = '';
     if (question.originalQuestion) {
@@ -624,22 +640,36 @@ function renderQuestion() {
         // Get explanation in current language
         const explanation = getText(originalQ.explanation, '');
         
-        // Combine answer and explanation
+        // Set answer text (without explanation)
         answerTextContent = correctAnswerText;
-        if (explanation) {
-            answerTextContent = answerTextContent ? `${answerTextContent}. ${explanation}` : explanation;
+        
+        // Store explanation separately (will be shown outside the box when revealed)
+        if (answerExplanation) {
+            if (explanation) {
+                answerExplanation.textContent = explanation;
+                // Keep it hidden until answer is revealed
+            } else {
+                answerExplanation.textContent = '';
+            }
         }
     } else {
         // Fallback to stored answer if original question not available
         answerTextContent = getText(question.answer);
+        // Try to get explanation from stored question data
+        const storedExplanation = getText(question.explanation, '');
+        if (answerExplanation) {
+            if (storedExplanation) {
+                answerExplanation.textContent = storedExplanation;
+                // Keep it hidden until answer is revealed
+            } else {
+                answerExplanation.textContent = '';
+            }
+        }
     }
     
-    // Update answer text
+    // Set the answer text content (it will be hidden by CSS opacity until revealed)
+    // The CSS ensures answer text is invisible when overlay is present
     answerText.textContent = answerTextContent || 'No answer available';
-    
-    // Reset answer overlay
-    answerContainer.classList.remove('revealed');
-    nextButton.classList.add('hidden');
     
     // Add fade-in animation (only if not the first question)
     if (questionContainer) {
@@ -651,9 +681,6 @@ function renderQuestion() {
             }, 500);
         }
     }
-    
-    // Reset answer overlay
-    isRevealed = false;
 }
 
 // Answer reveal interaction
@@ -664,6 +691,11 @@ function revealAnswer() {
     
     isRevealed = true;
     answerContainer.classList.add('revealed');
+    
+    // Show explanation outside the box after revealing answer
+    if (answerExplanation && answerExplanation.textContent.trim()) {
+        answerExplanation.classList.remove('hidden');
+    }
     
     // Show next button after reveal
     setTimeout(() => {
@@ -775,11 +807,9 @@ async function fetchQuestionsFromFirebase() {
                     // Get explanation if available
                     const explanation = getText(question.explanation, '');
                     
-                    // Create answer text: correct option + explanation (if available)
+                    // Store answer and explanation separately (not combined)
+                    // The answer text should only contain the answer option, not the explanation
                     let answerText = correctAnswerText;
-                    if (explanation) {
-                        answerText = answerText ? `${answerText}. ${explanation}` : explanation;
-                    }
                     
                     // Convert challenge question to daily question format
                     allQuestions.push({
@@ -787,7 +817,8 @@ async function fetchQuestionsFromFirebase() {
                         questionId: question.questionId,
                         challengeId: challenge.challengeId,
                         question: question.question, // Can be string or {en: string, ml: string}
-                        answer: answerText || getText(question.explanation, 'No answer available'),
+                        answer: answerText || 'No answer available',
+                        explanation: explanation || '', // Store explanation separately
                         // Keep original question data for reference
                         originalQuestion: question
                     });
